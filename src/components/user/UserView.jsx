@@ -509,11 +509,18 @@ export default function UserView({ session: propSession, settings: propSettings,
             // Main dishes (>0đ)
             const mainItems = allItems.filter(it => it.price > 0 && !it.name.toLowerCase().includes('(free)'));
 
-            const selectedPrice = (
-              selectedMixDishes.length === 0 ? 0 : 
-              rules.basePrice ? rules.basePrice : 
-              selectedMixDishes.length <= (rules.tier1Count || 2) ? tier1Price : tier2Price
-            ) + (mixExtraRice ? 2000 : 0);
+            const count = selectedMixDishes.length;
+            let selectedPrice = 0;
+            if (count === 0) {
+              selectedPrice = 0;
+            } else if (count <= 2) {
+              selectedPrice = tier1Price; // 28.000đ
+            } else if (count === 3) {
+              selectedPrice = tier2Price; // 35.000đ
+            } else {
+              // More than 3 dishes (e.g. 4, 5, 7 dishes): 35k + 7k for each extra dish
+              selectedPrice = tier2Price + (count - 3) * 7000;
+            }
 
             return (
               <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px', margin: '6px 0 10px' }}>
@@ -522,15 +529,15 @@ export default function UserView({ session: propSession, settings: propSettings,
                     {mixTitle}
                   </span>
                   <span className="status-badge status-open" style={{ fontSize: '10px' }}>
-                    {selectedMixDishes.length === 0 ? 'Chưa chọn món' : `${selectedPrice.toLocaleString('vi-VN')}đ`}
+                    {count === 0 ? 'Chưa chọn món' : count <= 2 ? `Gói 2 món (${selectedPrice.toLocaleString('vi-VN')}đ)` : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`}
                   </span>
                 </div>
 
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  Đánh dấu chọn món ăn / topping bạn muốn mix vào hộp cơm hôm nay:
+                  Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:
                 </p>
 
-                {/* Checkbox List for all dishes (0đ & main dishes) */}
+                {/* Checkbox List for all dishes */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '6px', marginBottom: '8px' }}>
                   {(freeMixItems.length > 0 ? freeMixItems : allItems).map((item, idx) => {
                     const isExtraItem = item.price > 0 && (item.name.toLowerCase().includes('thêm') || item.price < 5000);
@@ -567,7 +574,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                           }}
                           style={{ accentColor: 'var(--text-main)' }}
                         />
-                        <span>{item.name} {item.price > 0 ? `(${item.price.toLocaleString('vi-VN')}đ)` : ''}</span>
+                        <span>{item.name}</span>
                       </label>
                     );
                   })}
