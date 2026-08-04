@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp, Trash2, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
@@ -723,7 +723,7 @@ export default function UserView({ session: propSession, settings: propSettings,
             <div style={{ margin: '12px 0' }}>
               {qrImage ? (
                 <div className="qr-container">
-                  <img src={qrImage} alt="Mã QR Admin" className="qr-img" style={{ width: '180px', height: '180px', objectFit: 'contain' }} />
+                  <img src={qrImage} alt="Mã QR Admin" className="qr-img" style={{ width: '200px', height: '200px', objectFit: 'contain' }} />
                 </div>
               ) : (
                 <div style={{ background: 'var(--bg-card-hover)', color: 'var(--text-muted)', padding: '10px', borderRadius: '6px', fontSize: '12px' }}>
@@ -732,34 +732,28 @@ export default function UserView({ session: propSession, settings: propSettings,
               )}
             </div>
 
-            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '6px', textAlign: 'left', marginBottom: '12px' }}>
-              <div className="flex-between" style={{ marginBottom: '2px' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Số tiền cần chuyển:</span>
-                <strong style={{ color: 'var(--text-main)', fontSize: '14px' }}>
+            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', padding: '10px 12px', borderRadius: '6px', textAlign: 'left', marginBottom: '10px' }}>
+              <div className="flex-between">
+                <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Số tiền cần chuyển:</span>
+                <strong style={{ color: 'var(--text-main)', fontSize: '15px' }}>
                   {placedOrder.totalAmount.toLocaleString('vi-VN')}đ
                 </strong>
               </div>
-              <div className="flex-between">
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Nội dung CK đề xuất:</span>
-                <code style={{ color: 'var(--text-main)', fontWeight: '700' }}>{transferNote}</code>
-              </div>
             </div>
 
-            <button 
-              className="btn btn-outline btn-sm" 
-              style={{ width: '100%', marginBottom: '6px' }}
-              onClick={() => {
-                navigator.clipboard.writeText(transferNote);
-                setCopiedNote(true);
-                setTimeout(() => setCopiedNote(false), 2000);
-              }}
-            >
-              <Copy size={13} />
-              {copiedNote ? 'Đã copy nội dung!' : 'Copy Nội Dung Chuyển Khoản'}
-            </button>
+            {qrImage && (
+              <a 
+                href={qrImage} 
+                download={`QR_Chuyen_Tien_${placedOrder.userName.replace(/\s+/g, '_')}.png`}
+                className="btn btn-outline btn-sm" 
+                style={{ width: '100%', marginBottom: '8px', padding: '6px', textDecoration: 'none' }}
+              >
+                <Download size={14} /> Tải Ảnh QR Về Máy
+              </a>
+            )}
 
-            <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => setPlacedOrder(null)}>
-              Đã Xem / Hoàn Tất
+            <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '7px' }} onClick={() => setPlacedOrder(null)}>
+              Hoàn Tất
             </button>
           </div>
         </div>
