@@ -568,7 +568,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                 </p>
 
                 {/* Section 1: Checkbox List for Toppings (Counted) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '6px', marginBottom: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: '6px', marginBottom: '8px' }}>
                   {mixSelectionItems.map((item, idx) => {
                     const isChecked = selectedMixDishes.includes(item.name);
                     return (
@@ -586,7 +586,10 @@ export default function UserView({ session: propSession, settings: propSettings,
                           fontSize: '11px',
                           color: 'var(--text-main)',
                           fontWeight: isChecked ? '700' : '400',
-                          transition: 'all 0.15s ease'
+                          transition: 'all 0.15s ease',
+                          minWidth: 0,
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word'
                         }}
                       >
                         <input 
@@ -607,9 +610,9 @@ export default function UserView({ session: propSession, settings: propSettings,
                               setSelectedMixDishes(prev => prev.filter(n => n !== item.name));
                             }
                           }}
-                          style={{ accentColor: 'var(--text-main)' }}
+                          style={{ accentColor: 'var(--text-main)', flexShrink: 0 }}
                         />
-                        <span>{item.name}</span>
+                        <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.3' }}>{item.name}</span>
                       </label>
                     );
                   })}

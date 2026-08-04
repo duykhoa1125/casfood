@@ -247,8 +247,9 @@ textarea.input-field {
 
 .food-grid-2col {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+  width: 100%;
 }
 
 @media (max-width: 580px) {
@@ -261,13 +262,16 @@ textarea.input-field {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 5px 8px;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  min-height: 36px;
+  min-height: 38px;
   transition: border-color 0.15s ease;
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .food-cell:hover {
@@ -283,9 +287,10 @@ textarea.input-field {
   font-weight: 600;
   font-size: 12px;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.35;
 }
 
 .food-cell-price {
