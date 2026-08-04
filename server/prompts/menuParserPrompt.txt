@@ -15,11 +15,13 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
   - Với các menu "Đồng giá Mix 2 món 28k / Mix 3 món 35k": gán giá mặc định cho từng món ăn lẻ là 28000 (mức giá cơ sở).
   - Tách riêng món mua thêm như "Cơm thêm 2k" (giá 2000).
 
-### 🍱 XỬ LÝ NÂNG CAO CHO MENU CƠM MIX MÓN / CƠM BÌNH DÂN ĐỒNG GIÁ
-Khi gặp menu có tiêu đề "Mix 2 món 28k, Mix 3 món 35k" kèm danh sách các món ăn bên dưới (1. Đùi gà, 2. Thịt kho, 3. Sườn kho...):
-1. BẮT BUỘC phải trích xuất TẤT CẢ các món ăn lẻ được liệt kê vào danh sách `items` (Ví dụ: Đùi gà chiên muối ớt, Thịt kho trứng, Sườn kho thơm...).
-2. Nếu có món Combo như "Suất Cơm Mix 3 Món (35k)" hoặc "Cơm thêm (2k)", trích xuất thành các món riêng biệt trong danh sách.
-3. Đảm bảo số lượng món trích xuất được khớp chính xác với số món có trong bài đăng của quán.
+### 🍱 XỬ LÝ NÂNG CAO CHO MENU CƠM MIX MÓN / CƠM BÌNH DÂN (ĐỒNG GIÁ 28K - 35K)
+Khi gặp menu có tiêu đề "Mix 2 món 28k, Mix 3 món 35k" kèm danh sách các món ăn lẻ (1. Đùi gà, 2. Thịt kho, 3. Sườn kho...):
+1. BẮT BUỘC trích xuất TẤT CẢ các món ăn lẻ được liệt kê vào danh sách `items` với giá cơ sở 28000.
+2. Tự động thêm mảng `options` vào mỗi món ăn chính để người dùng chọn mix thêm món 2 (0đ) hoặc nâng cấp dĩa 3 món (+7k):
+   - Group 1: `title`: "Mix thêm món thứ 2 (Miễn phí 0đ)", `choices`: Danh sách các món ăn còn lại trong ngày với giá 0 (kèm lựa chọn "Không mix").
+   - Group 2: `title`: "Nâng lên dĩa 3 món", `choices`: [{ "name": "Không nâng (Dĩa 1-2 món 28k)", "price": 0 }, { "name": "Nâng lên dĩa 3 món (+7k)", "price": 7000 }].
+3. Tách riêng các món mua thêm như "Cơm thêm 1 bịch" thành item riêng với giá 2000.
 
 ### ❌ BỎ QUA HOÀN TOÀN (không được nhét vào danh sách món)
 - Tiêu đề/banner như: "HOT HOT HOT", "ĐẶC BIỆT NHẤT", "KHAI TRƯƠNG"
@@ -31,7 +33,7 @@ Khi gặp menu có tiêu đề "Mix 2 món 28k, Mix 3 món 35k" kèm danh sách 
 - Đường kẻ trang trí: `━━━━━`, `----`, `====`, `~~~~`
 
 ### 📦 PHÂN NHÓM THÔNG MINH
-- Tự phát hiện nhóm món từ context (ví dụ: "Cơm Mix Món (Đồng Giá 28k - 35k)", "Thức Uống", "Tráng Miệng")
+- Tự phát hiện nhóm món từ context (ví dụ: "Cơm Mix Món Hôm Nay", "Thức Uống", "Tráng Miệng")
 - Tên nhóm: viết hoa chữ cái đầu mỗi từ, ngắn gọn, không emoji
 
 ---
@@ -48,22 +50,25 @@ Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có 
         {
           "name": "Đùi gà chiên muối ớt",
           "price": 28000,
-          "description": ""
-        },
-        {
-          "name": "Thịt kho trứng",
-          "price": 28000,
-          "description": ""
-        },
-        {
-          "name": "Sườn kho thơm",
-          "price": 28000,
-          "description": ""
-        },
-        {
-          "name": "Suất Cơm Mix 3 Món",
-          "price": 35000,
-          "description": ""
+          "description": "Giá 28k (Cho phép chọn mix 2 món 28k hoặc 3 món 35k)",
+          "options": [
+            {
+              "title": "Mix thêm món thứ 2 (Miễn phí 0đ)",
+              "choices": [
+                { "name": "Không mix (Chỉ ăn 1 món này)", "price": 0 },
+                { "name": "Thịt kho trứng", "price": 0 },
+                { "name": "Sườn kho thơm", "price": 0 },
+                { "name": "Vịt kho gừng", "price": 0 }
+              ]
+            },
+            {
+              "title": "Nâng lên dĩa 3 món",
+              "choices": [
+                { "name": "Không nâng (Dĩa 1-2 món 28k)", "price": 0 },
+                { "name": "Nâng lên dĩa 3 món (+7k = 35k)", "price": 7000 }
+              ]
+            }
+          ]
         },
         {
           "name": "Cơm thêm 1 bịch",
