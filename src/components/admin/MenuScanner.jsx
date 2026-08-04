@@ -222,25 +222,96 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
             </button>
           </div>
 
-          {/* View Mode */}
+          {/* View Mode (100% Identical to User View) */}
           {!isEditingActiveMenu && (
             <div>
-              {activeMenu.length === 0
-                ? <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }}>Chưa có món ăn nào.</p>
-                : activeMenu.map((cat, catIdx) => (
-                  <div key={catIdx} style={{ marginBottom: '8px', background: 'var(--input-bg)', padding: '6px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.3px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '3px' }}>
-                      {cat.category} ({cat.items?.length || 0})
-                    </div>
-                    {cat.items?.map((item, itemIdx) => (
-                      <div key={item.id || itemIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '2px' }}>
-                        <span style={{ color: 'var(--text-main)' }}>• {item.name}</span>
-                        <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{item.price?.toLocaleString('vi-VN')}đ</span>
+              {activeMenu.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }}>Chưa có món ăn nào.</p>
+              ) : (
+                <div>
+                  {/* Dynamic Mix Box Preview for Admin */}
+                  {(() => {
+                    const isMixMenu = Boolean(
+                      session?.isMixMenu || 
+                      activeMenu.some(cat => (cat.category || '').toLowerCase().includes('mix'))
+                    );
+
+                    if (!isMixMenu) return null;
+
+                    const rules = session?.mixRules || {};
+                    const mixTitle = rules.mixTitle || '🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY';
+                    const maxAllowed = typeof rules.maxAllowedItems === 'number' ? rules.maxAllowedItems : null;
+                    const instructionText = rules.instructionText || (maxAllowed ? `Được chọn mix tối đa ${maxAllowed} món / topping` : 'Khách tự chọn món mix vào hộp cơm');
+
+                    const allItems = activeMenu.flatMap(cat => cat.items || []);
+                    const toppingItems = allItems.filter(it => it.isTopping || (it.price === 0 && !it.isFreeGift && !it.name.toLowerCase().includes('(free)')));
+                    const freeGiftItems = allItems.filter(it => it.isFreeGift || it.name.toLowerCase().includes('(free)'));
+                    const mixSelectionItems = toppingItems.length > 0 ? toppingItems : allItems.filter(it => it.price === 0);
+
+                    return (
+                      <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px 10px', marginBottom: '8px' }}>
+                        <div className="flex-between" style={{ marginBottom: '4px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '3px' }}>
+                          <span style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {mixTitle}
+                          </span>
+                          <span className="status-badge status-open" style={{ fontSize: '9px' }}>
+                            {maxAllowed ? `Tối đa ${maxAllowed} Topping` : 'Tự chọn Mix'}
+                          </span>
+                        </div>
+
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                          {instructionText}
+                        </p>
+
+                        {/* Topping list */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '4px', marginBottom: '6px' }}>
+                          {mixSelectionItems.map((item, idx) => (
+                            <div key={idx} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '3px 6px', borderRadius: '3px', fontSize: '10px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>•</span>
+                              <span>{item.name}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Free gifts */}
+                        {freeGiftItems.length > 0 && (
+                          <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '4px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+                              🎁 TẶNG KÈM MIỄN PHÍ:
+                            </span>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {freeGiftItems.map((item, idx) => (
+                                <span key={idx} style={{ background: 'var(--bg-card)', border: '1px dashed var(--border-color)', padding: '2px 5px', borderRadius: '3px', fontSize: '10px', color: 'var(--text-main)' }}>
+                                  🎁 {item.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                ))
-              }
+                    );
+                  })()}
+
+                  {/* 2-Column Food Grid for Admin View Mode */}
+                  {activeMenu.map((cat, catIdx) => (
+                    <div key={catIdx} className="menu-category-section" style={{ marginBottom: '8px' }}>
+                      <div className="category-header-title" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                        {cat.category} ({cat.items?.length || 0})
+                      </div>
+                      <div className="food-grid-2col" style={{ gap: '4px' }}>
+                        {cat.items?.map((item, itemIdx) => (
+                          <div key={item.id || itemIdx} className="food-cell" style={{ padding: '6px 8px' }}>
+                            <div className="food-cell-info">
+                              <div className="food-cell-name" style={{ fontSize: '11px' }}>{item.name}</div>
+                              <div className="food-cell-price" style={{ fontSize: '11px' }}>{item.price?.toLocaleString('vi-VN')}đ</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
