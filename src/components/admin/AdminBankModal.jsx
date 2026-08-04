@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { X, QrCode, CheckCircle, Upload, Trash2 } from 'lucide-react';
 import { updateAdminSettings } from '../../services/api';
+import PopupAlert from '../common/PopupAlert';
 
 export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
   const [qrImage, setQrImage] = useState(settings?.qrImage || '');
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Popup Alert State
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
+  const showPopup = (opts) => setPopup({ isOpen: true, type: 'info', ...opts });
+  const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
 
   // Handle Image Upload
   const handleImageUpload = (e) => {
@@ -13,7 +19,11 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn!');
+      showPopup({
+        type: 'warning',
+        title: 'Ảnh quá lớn (> 5MB)',
+        message: 'Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn nhé!'
+      });
       return;
     }
 
@@ -40,7 +50,11 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
         }, 1000);
       }
     } catch (err) {
-      alert('Lỗi lưu cài đặt: ' + err.message);
+      showPopup({
+        type: 'error',
+        title: 'Lỗi lưu cài đặt',
+        message: err.message
+      });
     } finally {
       setSaving(false);
     }
@@ -113,6 +127,8 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
           </div>
         </form>
       </div>
+
+      <PopupAlert {...popup} onClose={closePopup} />
     </div>
   );
 }

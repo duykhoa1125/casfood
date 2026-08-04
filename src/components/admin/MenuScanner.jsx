@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clipboard, UploadCloud, Sparkles, Plus, Trash2, Check, Image, X, Edit3, Eye, Menu as MenuIcon } from 'lucide-react';
 import { createSession, updateSession, parseMenuWithAI } from '../../services/api';
+import PopupAlert from '../common/PopupAlert';
 
 export default function MenuScanner({ session, onSessionCreated, onSessionUpdated, settings }) {
   const [rawText, setRawText] = useState('');
@@ -10,6 +11,11 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
   const [parseError, setParseError] = useState('');
   const [restaurantName, setRestaurantName] = useState('Cơm Tấm & Trà Sữa Văn Phòng');
   const [sessionTitle, setSessionTitle] = useState('Đặt Cơm Trưa Hôm Nay');
+
+  // Popup Alert State
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
+  const showPopup = (opts) => setPopup({ isOpen: true, type: 'info', ...opts });
+  const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
 
   // Attached images uploaded by Admin
   const [attachedImages, setAttachedImages] = useState([]);
@@ -51,7 +57,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
       if (res.success && res.menuData && res.menuData.length > 0) {
         setMenuCategories(res.menuData);
       } else {
-        setParseError(res.message || 'AI không tách được thực đơn. Kiểm tra lại API Key trong file .env.');
+        setParseError(res.message || 'AI không tách được thực đơn. Kiểm tra lại API Key.');
       }
     } catch (err) {
       setParseError('Lỗi kết nối AI: ' + err.message);
@@ -74,7 +80,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
         setRawText(text);
         processText(text);
       } else {
-        alert('Clipboard đang trống!');
+        showPopup({ type: 'warning', title: 'Clipboard đang trống', message: 'Vui lòng sao chép văn bản thực đơn từ Zalo / Facebook rồi bấm lại nút này nhé!' });
       }
     } catch (err) {
       const text = prompt('Dán (Ctrl+V) văn bản thực đơn từ Zalo/Facebook vào đây:');
@@ -90,7 +96,10 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
     const files = Array.from(e.target.files);
     if (!files.length) return;
     files.forEach(file => {
-      if (file.size > 8 * 1024 * 1024) { alert(`File ${file.name} quá lớn (> 8MB)`); return; }
+      if (file.size > 8 * 1024 * 1024) { 
+        showPopup({ type: 'warning', title: 'File quá lớn', message: `File ${file.name} quá lớn (> 8MB). Vui lòng chọn ảnh nhỏ hơn!` });
+        return; 
+      }
       const reader = new FileReader();
       reader.onloadend = () => setAttachedImages(prev => [...prev, reader.result]);
       reader.readAsDataURL(file);
@@ -138,7 +147,10 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
 
   // Lưu phiên mới
   const handleSaveSession = async () => {
-    if (!menuCategories || menuCategories.length === 0) { alert('Cần có ít nhất 1 nhóm món ăn'); return; }
+    if (!menuCategories || menuCategories.length === 0) { 
+      showPopup({ type: 'warning', title: 'Thực đơn trống', message: 'Cần có ít nhất 1 nhóm món ăn để mở phiên gom đơn!' });
+      return; 
+    }
     try {
       const res = await createSession({
         title: sessionTitle,
@@ -149,11 +161,17 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
         adminName: localStorage.getItem('casfood_admin_name')
       });
       if (res.success) {
-        alert('🎉 Tạo phiên gom đơn mới thành công!');
+        showPopup({
+          type: 'success',
+          title: 'Tạo phiên thành công 🎉',
+          message: 'Đã mở phiên gom đơn mới thành công! Bạn có thể sao chép link gửi cho đồng nghiệp.'
+        });
         setMenuCategories(null); setRawText(''); setAttachedImages([]);
         if (onSessionCreated) onSessionCreated(res.session);
       }
-    } catch (err) { alert('Lỗi: ' + err.message); }
+    } catch (err) { 
+      showPopup({ type: 'error', title: 'Lỗi tạo phiên', message: err.message }); 
+    }
   };
 
   // Active session menu edit helpers
@@ -165,8 +183,14 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
     try {
       setIsSavingMenu(true);
       const res = await updateSession(session.id, { menuData: activeMenuState });
-      if (res.success) { alert('✅ Đã cập nhật thực đơn!'); setIsEditingActiveMenu(false); if (onSessionUpdated) onSessionUpdated(res.session); }
-    } catch (err) { alert('Lỗi: ' + err.message); } finally { setIsSavingMenu(false); }
+      if (res.success) { 
+        showPopup({ type: 'success', title: 'Đã lưu thay đổi', message: 'Đã cập nhật thực đơn phiên hiện tại thành công!' }); 
+        setIsEditingActiveMenu(false); 
+        if (onSessionUpdated) onSessionUpdated(res.session); 
+      }
+    } catch (err) { 
+      showPopup({ type: 'error', title: 'Lỗi lưu thực đơn', message: err.message }); 
+    } finally { setIsSavingMenu(false); }
   };
 
   const totalDraftItems = menuCategories ? menuCategories.reduce((s, c) => s + c.items.length, 0) : 0;
@@ -380,6 +404,8 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
           </div>
         </div>
       )}
+
+      <PopupAlert {...popup} onClose={closePopup} />
     </div>
   );
 }

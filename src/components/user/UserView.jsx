@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession } from '../../services/api';
+import PopupAlert from '../common/PopupAlert';
 
 export default function UserView({ session: propSession, settings: propSettings, onOrderPlaced }) {
   const { sessionId: routeSessionId } = useParams();
@@ -12,6 +13,14 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Saved User Name in LocalStorage
   const [userName, setUserName] = useState(() => localStorage.getItem('lunch_user_name') || '');
   const [isEditingName, setIsEditingName] = useState(!localStorage.getItem('lunch_user_name'));
+
+  // Popup Alert Dialog State
+  const [popup, setPopup] = useState({ isOpen: false, type: 'warning', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
+
+  const showPopup = ({ type = 'warning', title, message, confirmText, cancelText, onConfirm }) => {
+    setPopup({ isOpen: true, type, title, message, confirmText, cancelText, onConfirm });
+  };
+  const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
 
   // Cart State
   const [cart, setCart] = useState([]);
@@ -183,10 +192,17 @@ export default function UserView({ session: propSession, settings: propSettings,
 
   // Clear all items in cart
   const handleClearCart = () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ món trong giỏ hàng?')) {
-      setCart([]);
-      setShowCartModal(false);
-    }
+    showPopup({
+      type: 'confirm',
+      title: 'Xóa toàn bộ giỏ hàng',
+      message: 'Bạn có chắc chắn muốn xóa tất cả món ăn trong giỏ hàng?',
+      confirmText: 'Xóa ngay',
+      cancelText: 'Hủy',
+      onConfirm: () => {
+        setCart([]);
+        setShowCartModal(false);
+      }
+    });
   };
 
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -195,13 +211,21 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Submit Order
   const handleSubmitOrder = async () => {
     if (!userName.trim()) {
-      alert('Vui lòng nhập tên của bạn để đặt món!');
+      showPopup({
+        type: 'warning',
+        title: 'Chưa nhập tên người đặt',
+        message: 'Vui lòng nhập tên của bạn trước khi chốt đơn nhé!'
+      });
       setIsEditingName(true);
       return;
     }
 
     if (cart.length === 0) {
-      alert('Giỏ hàng trống! Vui lòng chọn ít nhất 1 món ăn.');
+      showPopup({
+        type: 'warning',
+        title: 'Giỏ hàng đang trống',
+        message: 'Vui lòng chọn ít nhất 1 món ăn từ thực đơn trước khi chốt đơn!'
+      });
       return;
     }
 
@@ -219,10 +243,18 @@ export default function UserView({ session: propSession, settings: propSettings,
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
         if (onOrderPlaced) onOrderPlaced();
       } else {
-        alert('Lỗi đặt món: ' + res.message);
+        showPopup({
+          type: 'error',
+          title: 'Lỗi đặt món',
+          message: res.message || 'Không thể chốt đơn vào lúc này.'
+        });
       }
     } catch (err) {
-      alert('Không thể gửi đơn đặt món: ' + err.message);
+      showPopup({
+        type: 'error',
+        title: 'Lỗi kết nối',
+        message: 'Không thể gửi đơn đặt món: ' + err.message
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -730,6 +762,9 @@ export default function UserView({ session: propSession, settings: propSettings,
           </div>
         </div>
       )}
+
+      {/* Global Centered Popup Alert / Confirm Dialog */}
+      <PopupAlert {...popup} onClose={closePopup} />
     </div>
   );
 }

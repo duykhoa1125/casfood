@@ -1,8 +1,13 @@
-import React from 'react';
-import { Lock, Unlock, ShoppingBag, Trash2, RefreshCw, PlusCircle, CheckCircle2, Clock, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { Lock, Unlock, ShoppingBag, Trash2, RefreshCw, PlusCircle } from 'lucide-react';
 import { toggleSessionStatus, toggleOrderPayment, deleteOrder, deleteSession } from '../../services/api';
+import PopupAlert from '../common/PopupAlert';
 
 export default function OrderDashboard({ session, orders, onRefresh, onResetSession }) {
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
+  const showPopup = (opts) => setPopup({ isOpen: true, type: 'info', ...opts });
+  const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
+
   if (!session) return null;
 
   const isClosed = session.status === 'CLOSED';
@@ -15,7 +20,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
         onRefresh();
       }
     } catch (err) {
-      alert('Lỗi đổi trạng thái phiên: ' + err.message);
+      showPopup({ type: 'error', title: 'Lỗi đổi trạng thái', message: err.message });
     }
   };
 
@@ -25,38 +30,53 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
       await toggleOrderPayment(orderId, nextStatus);
       onRefresh();
     } catch (err) {
-      alert('Lỗi cập nhật trạng thái thanh toán: ' + err.message);
+      showPopup({ type: 'error', title: 'Lỗi cập nhật thanh toán', message: err.message });
     }
   };
 
-  const handleDeleteOrder = async (orderId, userName) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa đơn đặt món của "${userName}" không?`)) {
-      return;
-    }
-    try {
-      const res = await deleteOrder(orderId);
-      if (res.success) {
-        onRefresh();
-      } else {
-        alert('Lỗi xóa đơn: ' + res.message);
+  const handleDeleteOrder = (orderId, userName) => {
+    showPopup({
+      type: 'confirm',
+      title: 'Xóa đơn đặt món',
+      message: `Bạn có chắc chắn muốn xóa đơn đặt món của "${userName}" không?`,
+      confirmText: 'Xóa đơn',
+      cancelText: 'Hủy',
+      onConfirm: async () => {
+        try {
+          const res = await deleteOrder(orderId);
+          if (res.success) {
+            onRefresh();
+          } else {
+            showPopup({ type: 'error', title: 'Lỗi xóa đơn', message: res.message });
+          }
+        } catch (err) {
+          showPopup({ type: 'error', title: 'Lỗi xóa đơn', message: err.message });
+        }
       }
-    } catch (err) {
-      alert('Lỗi xóa đơn: ' + err.message);
-    }
+    });
   };
 
-  const handleResetNewSession = async () => {
-    if (!window.confirm('⚠️ XÁC NHẬN TẠO PHIÊN MỚI:\n\nBạn có chắc chắn muốn kết thúc phiên đặt cơm hôm nay để TẠO PHIÊN MỚI không?\nToàn bộ danh sách đơn đặt món cũ sẽ được làm sạch.')) {
-      return;
-    }
-
-    try {
-      await deleteSession(session.id);
-      alert('✨ Đã làm sạch phiên cũ thành công! Bây giờ bạn có thể dán menu mới để mở phiên gom đơn tiếp theo.');
-      if (onResetSession) onResetSession();
-    } catch (err) {
-      alert('Lỗi tạo phiên mới: ' + err.message);
-    }
+  const handleResetNewSession = () => {
+    showPopup({
+      type: 'confirm',
+      title: 'Xác nhận tạo phiên mới',
+      message: 'Bạn có chắc chắn muốn kết thúc phiên đặt cơm hôm nay để TẠO PHIÊN MỚI không?\n\nToàn bộ danh sách đơn đặt món cũ sẽ được làm sạch.',
+      confirmText: 'Kết thúc & Tạo mới',
+      cancelText: 'Hủy',
+      onConfirm: async () => {
+        try {
+          await deleteSession(session.id);
+          showPopup({
+            type: 'success',
+            title: 'Tạo phiên mới thành công',
+            message: 'Đã làm sạch phiên cũ! Bây giờ bạn có thể dán menu mới để mở phiên gom đơn tiếp theo.'
+          });
+          if (onResetSession) onResetSession();
+        } catch (err) {
+          showPopup({ type: 'error', title: 'Lỗi tạo phiên mới', message: err.message });
+        }
+      }
+    });
   };
 
   // Metrics
@@ -211,6 +231,8 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
           </div>
         )}
       </div>
+
+      <PopupAlert {...popup} onClose={closePopup} />
     </div>
   );
 }

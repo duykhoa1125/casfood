@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Utensils, QrCode, Settings, Share2, Shield, Sun, Moon, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Utensils, QrCode, Settings, Share2, Sun, Moon, LogOut } from 'lucide-react';
+import PopupAlert from './PopupAlert';
 
 export default function Header({ session, isAdminView, adminSlug, onOpenBankModal }) {
   const navigate = useNavigate();
@@ -8,6 +9,11 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
 
   // Dark / Light Theme State
   const [theme, setTheme] = useState(() => localStorage.getItem('casfood_theme') || 'dark');
+
+  // Popup Alert State
+  const [popup, setPopup] = useState({ isOpen: false, type: 'info', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
+  const showPopup = (opts) => setPopup({ isOpen: true, type: 'info', ...opts });
+  const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -21,21 +27,35 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
   const copySessionLink = () => {
     const sessionId = session?.id;
     if (!sessionId) {
-      alert('Chưa có phiên gom đơn nào. Hãy tạo phiên trước!');
+      showPopup({
+        type: 'warning',
+        title: 'Chưa có phiên gom đơn',
+        message: 'Hãy dán menu để mở phiên trước khi gửi link nhé!'
+      });
       return;
     }
     const url = `${window.location.origin}/order/${sessionId}`;
     navigator.clipboard.writeText(url).catch(() => {});
-    alert('✅ Đã sao chép link đặt món cho đồng nghiệp:\n' + url);
+    showPopup({
+      type: 'success',
+      title: 'Đã sao chép đường link!',
+      message: `Đường link đặt món cho đồng nghiệp:\n${url}`
+    });
   };
 
   const handleLogout = () => {
-    const choice = confirm('Đổi người gom đơn?\n\n→ Bấm OK: Xóa phiên hiện tại, người khác có thể tạo phòng mới từ trang chủ.\n→ Bấm Hủy: Giữ nguyên.');
-    if (choice) {
-      localStorage.removeItem('casfood_admin_slug');
-      localStorage.removeItem('casfood_admin_name');
-      navigate('/', { replace: true });
-    }
+    showPopup({
+      type: 'confirm',
+      title: 'Đổi người gom đơn?',
+      message: 'Xóa phiên đăng nhập hiện tại để người khác có thể tạo phòng mới từ trang chủ?',
+      confirmText: 'Đồng ý',
+      cancelText: 'Hủy',
+      onConfirm: () => {
+        localStorage.removeItem('casfood_admin_slug');
+        localStorage.removeItem('casfood_admin_name');
+        navigate('/', { replace: true });
+      }
+    });
   };
 
   return (
@@ -100,6 +120,8 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
           </button>
         )}
       </div>
+
+      <PopupAlert {...popup} onClose={closePopup} />
     </header>
   );
 }
