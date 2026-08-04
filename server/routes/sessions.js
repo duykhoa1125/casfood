@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
 // CREATE new session
 router.post('/', async (req, res) => {
   try {
-    const { title, restaurantName, menuData, attachedImages, adminSlug, adminName } = req.body;
+    const { title, restaurantName, menuData, attachedImages, adminSlug, adminName, isMixMenu, mixRules } = req.body;
     
     const newSession = {
       id: 'lunch-' + Math.random().toString(36).substring(2, 8),
@@ -47,6 +47,8 @@ router.post('/', async (req, res) => {
       title: title || "Gom Đơn Đặt Trưa",
       restaurantName: restaurantName || "Nhà hàng / Quán ăn",
       status: "OPEN",
+      isMixMenu: isMixMenu || false,
+      mixRules: mixRules || null,
       createdAt: new Date(),
       menuData: menuData || [],
       attachedImages: attachedImages || []

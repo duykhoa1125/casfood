@@ -488,21 +488,32 @@ export default function UserView({ session: propSession, settings: propSettings,
             )}
           </div>
 
-          {/* Interactive Mix Box Builder Card */}
-          {menuData.length > 0 && (
-            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px', margin: '6px 0 10px' }}>
-              <div className="flex-between" style={{ marginBottom: '6px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '4px' }}>
-                <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY (1-2 món = 28k | 3 món = 35k)
-                </span>
-                <span className="status-badge status-open" style={{ fontSize: '10px' }}>
-                  {selectedMixDishes.length === 0 ? 'Chưa chọn món' : selectedMixDishes.length <= 2 ? 'Gói 28.000đ' : 'Gói 35.000đ'}
-                </span>
-              </div>
+          {/* Dynamic Mix Menu Check */}
+          {(() => {
+            const isMixMenu = Boolean(
+              session?.isMixMenu || 
+              menuData.some(cat => (cat.category || '').toLowerCase().includes('mix'))
+            );
 
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:
-              </p>
+            if (!isMixMenu || menuData.length === 0) return null;
+
+            const tier1Price = session?.mixRules?.tier1Price || 28000;
+            const tier2Price = session?.mixRules?.tier2Price || 35000;
+
+            return (
+              <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px', margin: '6px 0 10px' }}>
+                <div className="flex-between" style={{ marginBottom: '6px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '4px' }}>
+                  <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY (1-2 món = {tier1Price / 1000}k | 3 món = {tier2Price / 1000}k)
+                  </span>
+                  <span className="status-badge status-open" style={{ fontSize: '10px' }}>
+                    {selectedMixDishes.length === 0 ? 'Chưa chọn món' : selectedMixDishes.length <= 2 ? `Gói ${tier1Price.toLocaleString('vi-VN')}đ` : `Gói ${tier2Price.toLocaleString('vi-VN')}đ`}
+                  </span>
+                </div>
+
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:
+                </p>
 
               {/* Checkbox List for all dishes */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '6px', marginBottom: '8px' }}>
@@ -609,7 +620,8 @@ export default function UserView({ session: propSession, settings: propSettings,
                 </button>
               </div>
             </div>
-          )}
+          );
+        })()}
 
           {/* 2-Column Food Grid Layout */}
           <div>

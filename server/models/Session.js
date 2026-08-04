@@ -7,6 +7,8 @@ const SessionSchema = new mongoose.Schema({
   title: { type: String, default: "Gom Đơn Đặt Trưa" },
   restaurantName: { type: String, default: "Nhà hàng / Quán ăn" },
   status: { type: String, default: "OPEN" },
+  isMixMenu: { type: Boolean, default: false },
+  mixRules: { type: Object, default: null },
   menuData: { type: Array, default: [] },
   attachedImages: { type: Array, default: [] },
   createdAt: { type: Date, default: Date.now }

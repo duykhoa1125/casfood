@@ -126,6 +126,8 @@ router.post('/', async (req, res) => {
     return res.json({
       success: true,
       menuData: formattedCategories,
+      isMixMenu: parsedObj.isMixMenu || false,
+      mixRules: parsedObj.mixRules || null,
       rawAiOutput
     });
 

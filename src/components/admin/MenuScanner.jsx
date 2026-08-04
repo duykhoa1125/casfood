@@ -37,6 +37,10 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
     }
   }, [session]);
 
+  // State for AI dynamic mix menu detection
+  const [isMixMenu, setIsMixMenu] = useState(false);
+  const [mixRules, setMixRules] = useState(null);
+
   // Gửi text qua AI để phân tích
   const processText = async (text) => {
     if (!text || !text.trim()) {
@@ -56,6 +60,8 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
 
       if (res.success && res.menuData && res.menuData.length > 0) {
         setMenuCategories(res.menuData);
+        setIsMixMenu(res.isMixMenu || false);
+        setMixRules(res.mixRules || null);
       } else {
         setParseError(res.message || 'AI không tách được thực đơn. Kiểm tra lại API Key.');
       }
@@ -157,6 +163,8 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
         restaurantName,
         menuData: menuCategories,
         attachedImages,
+        isMixMenu,
+        mixRules,
         adminSlug: localStorage.getItem('casfood_admin_slug'),
         adminName: localStorage.getItem('casfood_admin_name')
       });
