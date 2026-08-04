@@ -499,27 +499,30 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const rules = session?.mixRules || {};
             const mixTitle = rules.mixTitle || '🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY';
-            const basePrice = rules.basePrice || 28000;
-            const tier1Price = rules.tier1Price || basePrice;
-            const tier2Price = rules.tier2Price || 35000;
+            
+            // Dynamic tier rules extracted by AI (Zero hardcoding)
+            const tier1Count = typeof rules.tier1Count === 'number' ? rules.tier1Count : 2;
+            const tier1Price = typeof rules.tier1Price === 'number' ? rules.tier1Price : (rules.basePrice || 28000);
+            
+            const tier2Count = typeof rules.tier2Count === 'number' ? rules.tier2Count : (tier1Count + 1);
+            const tier2Price = typeof rules.tier2Price === 'number' ? rules.tier2Price : (tier1Price + 7000);
+            
+            const extraItemPrice = typeof rules.extraItemPrice === 'number' ? rules.extraItemPrice : (tier2Price - tier1Price);
 
             const allItems = menuData.flatMap(cat => cat.items || []);
-            // Free dishes (0đ) or items with price 0
             const freeMixItems = allItems.filter(it => it.price === 0 || it.name.toLowerCase().includes('(free)'));
-            // Main dishes (>0đ)
-            const mainItems = allItems.filter(it => it.price > 0 && !it.name.toLowerCase().includes('(free)'));
 
             const count = selectedMixDishes.length;
             let selectedPrice = 0;
             if (count === 0) {
               selectedPrice = 0;
-            } else if (count <= 2) {
-              selectedPrice = tier1Price; // 28.000đ
-            } else if (count === 3) {
-              selectedPrice = tier2Price; // 35.000đ
+            } else if (count <= tier1Count) {
+              selectedPrice = tier1Price;
+            } else if (count <= tier2Count) {
+              selectedPrice = tier2Price;
             } else {
-              // More than 3 dishes (e.g. 4, 5, 7 dishes): 35k + 7k for each extra dish
-              selectedPrice = tier2Price + (count - 3) * 7000;
+              // Dynamically add extraItemPrice for dishes beyond tier2Count
+              selectedPrice = tier2Price + (count - tier2Count) * extraItemPrice;
             }
 
             return (
@@ -529,7 +532,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                     {mixTitle}
                   </span>
                   <span className="status-badge status-open" style={{ fontSize: '10px' }}>
-                    {count === 0 ? 'Chưa chọn món' : count <= 2 ? `Gói 2 món (${selectedPrice.toLocaleString('vi-VN')}đ)` : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`}
+                    {count === 0 ? 'Chưa chọn món' : count <= tier1Count ? `Gói ${tier1Count} món (${selectedPrice.toLocaleString('vi-VN')}đ)` : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`}
                   </span>
                 </div>
 
