@@ -348,11 +348,6 @@ export default function UserView({ session: propSession, settings: propSettings,
     }
   };
 
-  const categoriesList = ['ALL', ...menuData.map(c => c.category)];
-  const filteredCategories = selectedCategory === 'ALL' 
-    ? menuData 
-    : menuData.filter(c => c.category === selectedCategory);
-
   const transferNote = placedOrder ? `LUNCH ${placedOrder.userName}`.toUpperCase() : '';
 
   return (
@@ -489,23 +484,9 @@ export default function UserView({ session: propSession, settings: propSettings,
             )}
           </div>
 
-          {/* Category Pills */}
-          <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '6px', marginBottom: '8px' }}>
-            {categoriesList.map(cat => (
-              <button 
-                key={cat}
-                className={`btn btn-sm ${selectedCategory === cat ? 'btn-primary' : 'btn-outline'}`}
-                onClick={() => setSelectedCategory(cat)}
-                style={{ whiteSpace: 'nowrap', padding: '3px 8px', fontSize: '11px' }}
-              >
-                {cat === 'ALL' ? 'Tất Cả Món' : cat}
-              </button>
-            ))}
-          </div>
-
           {/* 2-Column Food Grid Layout */}
           <div>
-            {filteredCategories.map((catGroup, catIdx) => (
+            {menuData.map((catGroup, catIdx) => (
               <div key={catIdx} className="menu-category-section">
                 <div className="category-header-title">
                   {catGroup.category}
