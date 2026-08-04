@@ -7,36 +7,34 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
 
 ---
 
-## QUY TẮC NHẬN BIẾT LOẠI MENU (DYNAMIC MENU TYPE DETECTION)
+## QUY TẮC PHÂN TÍCH LOẠI MENU ĐỘNG (DYNAMIC MENU TYPE DETECTION)
 
-BẮT BUỘC xác định thuộc tính `"isMixMenu"` (boolean):
+BẮT BUỘC xác định thuộc tính `"isMixMenu"` (boolean) và `"mixRules"`:
 
 ### 1. KHI NÀO `"isMixMenu": true`?
-Khi trong văn bản thực đơn xuất hiện các từ khóa/dấu hiệu chọn mix món như:
-- `"MIX 2 MÓN"`, `"MIX 3 MÓN"`, `"CƠM MIX"`, `"ĐỒNG GIÁ 28K MIX 2 MÓN 35K MIX 3 MÓN"`
-- `"TỰ CHỌN 2 MÓN / 3 MÓN"`, `"CƠM BÌNH DÂN CHỌN MÓN"`, `"CƠM KHAY ĐỒNG GIÁ"`
--> Khi `"isMixMenu": true`:
-  - Trích xuất toàn bộ các món ăn lẻ trong khay/thực đơn vào `items`.
-  - Tự trích xuất thông tin `mixRules`:
-    - `tier1Count`: Số món gói 1 (Mặc định 2 nếu là Mix 2 món)
-    - `tier1Price`: Giá gói 1 (Ví dụ 28000)
-    - `tier2Count`: Số món gói 2 (Mặc định 3 nếu là Mix 3 món)
-    - `tier2Price`: Giá gói 2 (Ví dụ 35000)
+Khi thực đơn có dạng suất cơm chính/set combo đi kèm danh sách topping/món phụ chọn kèm (miễn phí hoặc giá 0đ, hoặc được mix N món):
+- Ví dụ A: `#28K Cơm chiên trứng + gà tươi, được mix thêm 2 trong 4 topping: Trứng ốp la, xúc xích, Nem nướng, Dồi sụn. Free 1 canh, Free 1 cơm thêm. Canh thêm 2k, cơm thêm 3k`
+- Ví dụ B: `Cơm Minh Thư đồng giá 28k mix 2 món 28k mix 3 món 35k`
+
+👉 Khi `"isMixMenu": true`:
+1. Trích xuất món chính (ví dụ: `Cơm chiên trứng + gà tươi` giá 28000).
+2. Trích xuất TẤT CẢ các topping / món mix kèm miễn phí với giá 0đ (ví dụ: `Trứng ốp la` 0đ, `Xúc xích` 0đ, `Nem nướng` 0đ, `Dồi sụn` 0đ, `Canh rong biển (Free)` 0đ, `Cơm thêm (Free)` 0đ).
+3. Trích xuất các món gọi thêm trả phí nếu có (ví dụ: `Canh thêm` 2000đ, `Cơm thêm` 3000đ).
+4. Trích xuất thông tin `mixRules`:
+   - `basePrice`: Giá suất chính (Ví dụ: 28000)
+   - `maxFreeToppings`: Số món mix miễn phí được chọn (Ví dụ: 2 nếu bài viết ghi "mix 2 món/topping")
+   - `mixTitle`: Tiêu đề hiển thị động (Ví dụ: "Suất Cơm Chiên Gà Tươi 28K - Chọn Mix 2 Topping Miễn Phí")
 
 ### 2. KHI NÀO `"isMixMenu": false`?
-Các thực đơn thông thường KHÔNG CÓ cơ chế mix khay đồng giá:
-- Trà sữa, sinh tố, sữa hạt, cà phê, nước giải khát.
-- Bún bò, phở, hủ tiếu, lẩu, mì cay, cơm tấm bán món lẻ truyền thống.
-- Bánh mì, ăn vặt, chè, tráng miệng.
--> Khi `"isMixMenu": false`: KHÔNG gán mixRules, chỉ trích xuất danh sách nhóm & món ăn theo giá ghi trên menu.
+Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, sinh tố, bún, phở, mì cay, lẩu...):
+-> Khi `"isMixMenu": false`: KHÔNG gán `mixRules`, chỉ trích xuất mảng `categories` món ăn theo đúng giá ghi trên menu.
 
 ---
 
 ## QUY TẮC BẮT BUỘC KHÁC
 
-### ✅ GIỮ LẠI (thông tin quan trọng)
-- Tên món ăn / thức uống thực sự.
-- Giá tiền (20k, 30k, 30.000đ, 30000...).
+### ✅ GIỮ LẠI
+- Phân biệt RÕ RÀNG giữa món Free (0đ) và món mua thêm có tiền (ví dụ: "Free 1 cơm thêm" -> price: 0; "cơm thêm 3k" -> price: 3000).
 
 ### ❌ BỎ QUA HOÀN TOÀN
 - Tiêu đề/banner marketing: "HOT HOT HOT", "KHAI TRƯƠNG".
@@ -47,49 +45,33 @@ Các thực đơn thông thường KHÔNG CÓ cơ chế mix khay đồng giá:
 ## ĐỊNH DẠNG ĐẦU RA (JSON ONLY)
 Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có ```json, KHÔNG có lời giải thích).
 
-Ví dụ 1: Menu Cơm Mix (`"isMixMenu": true`)
+Ví dụ (Menu Cơm Mix Topping):
 ```json
 {
   "isMixMenu": true,
   "mixRules": {
-    "tier1Count": 2,
-    "tier1Price": 28000,
-    "tier2Count": 3,
-    "tier2Price": 35000
+    "basePrice": 28000,
+    "maxFreeToppings": 2,
+    "mixTitle": "Cơm Chiên Gà Tươi 28K - Được Mix 2 Topping + Free Canh/Cơm"
   },
   "categories": [
     {
-      "category": "Cơm Mix Món Hôm Nay",
+      "category": "Món Chính & Topping Mix",
       "items": [
-        { "name": "Đùi gà chiên muối ớt", "price": 28000 },
-        { "name": "Thịt kho trứng", "price": 28000 },
-        { "name": "Cơm thêm 1 bịch", "price": 2000 }
+        { "name": "Cơm chiên trứng + gà tươi", "price": 28000 },
+        { "name": "Trứng ốp la (Free)", "price": 0 },
+        { "name": "Xúc xích (Free)", "price": 0 },
+        { "name": "Nem nướng (Free)", "price": 0 },
+        { "name": "Dồi sụn (Free)", "price": 0 },
+        { "name": "Canh rong biển (Free)", "price": 0 },
+        { "name": "Cơm thêm (Free)", "price": 0 },
+        { "name": "Canh thêm", "price": 2000 },
+        { "name": "Cơm thêm", "price": 3000 }
       ]
     }
   ]
 }
 ```
 
-Ví dụ 2: Menu Nước Uống / Món Lẻ Thông Thường (`"isMixMenu": false`)
-```json
-{
-  "isMixMenu": false,
-  "categories": [
-    {
-      "category": "Sữa Hạt",
-      "items": [
-        { "name": "Sữa hạt số 4", "price": 20000 }
-      ]
-    },
-    {
-      "category": "Đồ Uống",
-      "items": [
-        { "name": "Sinh tố 700ml", "price": 20000 },
-        { "name": "Matcha", "price": 20000 }
-      ]
-    }
-  ]
-}
-```
+Nếu không tìm thấy món ăn nào, trả về: `{"isMixMenu": false, "categories": []}`
 
-Nếu không tìm thấy bất kỳ món ăn nào, trả về: `{"isMixMenu": false, "categories": []}`
