@@ -38,27 +38,27 @@ export default function ReportExporter({ session, orders }) {
 
   const totalItemsCount = Object.values(itemMap).reduce((sum, i) => sum + i.quantity, 0);
 
-  // Generate Vendor Text
-  let vendorText = `📋 BÁO CÁO GỘP ĐẶT MÓN - ${session.restaurantName || 'Quán Cơm'}\n`;
-  vendorText += `📌 Phiên: ${session.title}\n`;
+  // Generate Vendor Text (Clean & Simple Layout)
+  let vendorText = `BÁO CÁO ĐẶT MÓN - ${session.restaurantName || 'Quán Cơm'}\n`;
+  vendorText += `Phiên: ${session.title}\n`;
   vendorText += `----------------------------------\n`;
   
   let idx = 1;
   for (const [key, details] of Object.entries(itemMap)) {
     vendorText += `${idx}. ${details.name}${details.optionsText}: ${details.quantity} phần\n`;
     if (details.itemNote) {
-      vendorText += `   📝 Ghi chú: ${details.itemNote}\n`;
+      vendorText += `   (Ghi chú: ${details.itemNote})\n`;
     }
     idx++;
   }
   
   vendorText += `----------------------------------\n`;
-  vendorText += `🧮 TỔNG CỘNG: ${totalItemsCount} phần món\n`;
+  vendorText += `TỔNG CỘNG: ${totalItemsCount} phần món\n`;
 
   if (generalNotes.length > 0) {
-    vendorText += `\n📌 GHI CHÚ CHUNG ĐƠN HÀNG:\n`;
+    vendorText += `\nGHI CHÚ CHUNG:\n`;
     generalNotes.forEach(note => {
-      vendorText += `• ${note}\n`;
+      vendorText += `- ${note}\n`;
     });
   }
 
