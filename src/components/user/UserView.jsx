@@ -65,19 +65,45 @@ export default function UserView({ session: propSession, settings: propSettings,
     }
   }, [session?.id]);
 
+  // Live Session Polling & Status Transition Notification
   useEffect(() => {
-    if (routeSessionId && routeSessionId !== propSession?.id) {
-      fetchSession(routeSessionId).then(res => {
-        if (res.success) {
-          setSession(res.session);
-          setSettings(res.settings);
+    const sId = routeSessionId || propSession?.id || session?.id;
+    if (!sId) return;
+
+    const pollSession = async () => {
+      try {
+        const res = await fetchSession(sId);
+        if (res.success && res.session) {
+          const updated = res.session;
+          setSession(prev => {
+            if (prev && prev.status && prev.status !== updated.status) {
+              if (updated.status === 'CLOSED') {
+                showPopup({
+                  type: 'warning',
+                  title: 'Phiên Gom Đơn Đã Đóng 🔴',
+                  message: 'Người gom đơn đã khóa sổ nhận đơn hôm nay! Bạn không thể thêm hoặc sửa đơn được nữa.'
+                });
+              } else if (updated.status === 'OPEN') {
+                showPopup({
+                  type: 'success',
+                  title: 'Phiên Gom Đơn Đã Mở Lại 🟢',
+                  message: 'Người gom đơn đã mở lại nhận đơn! Bạn có thể tiếp tục chọn món và chốt đơn.'
+                });
+              }
+            }
+            return updated;
+          });
+          if (res.settings) setSettings(res.settings);
         }
-      }).catch(err => console.error(err));
-    } else {
-      setSession(propSession);
-      setSettings(propSettings);
-    }
-  }, [routeSessionId, propSession, propSettings]);
+      } catch (err) {
+        console.error('Session polling error:', err);
+      }
+    };
+
+    pollSession();
+    const interval = setInterval(pollSession, 5000);
+    return () => clearInterval(interval);
+  }, [routeSessionId, propSession?.id]);
 
   useEffect(() => {
     if (userName) {
@@ -262,6 +288,15 @@ export default function UserView({ session: propSession, settings: propSettings,
 
   // Submit Order
   const handleSubmitOrder = async () => {
+    if (session?.status === 'CLOSED') {
+      showPopup({
+        type: 'warning',
+        title: 'Phiên Gom Đơn Đã Đóng 🔴',
+        message: 'Người gom đơn đã khóa sổ nhận đơn! Rất tiếc bạn không thể chốt đơn lúc này.'
+      });
+      return;
+    }
+
     if (!userName.trim()) {
       showPopup({
         type: 'warning',
@@ -364,6 +399,13 @@ export default function UserView({ session: propSession, settings: propSettings,
               )}
             </div>
           </div>
+
+          {/* Prominent Warning Banner when Session is Closed */}
+          {isClosed && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', margin: '8px 0', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <AlertTriangle size={16} /> Phiên gom đơn đã đóng. Người gom đơn đã khóa sổ nhận đơn!
+            </div>
+          )}
 
           {/* DEDICATED SEPARATE SECTION: Admin Payment QR Code */}
           {qrImage && showAdminQrSection && (
