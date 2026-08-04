@@ -228,6 +228,35 @@ export default function UserView({ session: propSession, settings: propSettings,
     });
   };
 
+  // Copy Colleague Order 1-Click ("Đặt Giống Bạn Này")
+  const handleCopyColleagueOrder = (colleagueOrder) => {
+    if (!colleagueOrder || !colleagueOrder.items || colleagueOrder.items.length === 0) return;
+
+    const clonedItems = colleagueOrder.items.map(it => {
+      const unitPrice = it.itemTotal && it.quantity ? Math.round(it.itemTotal / it.quantity) : (it.price || 0);
+      const qty = it.quantity || 1;
+      return {
+        cartId: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        id: it.id || `item_${Date.now()}`,
+        name: it.name,
+        price: unitPrice,
+        quantity: qty,
+        selectedOptions: it.selectedOptions || [],
+        notes: it.notes || '',
+        itemTotal: it.itemTotal || (unitPrice * qty)
+      };
+    });
+
+    setCart(prevCart => [...prevCart, ...clonedItems]);
+    confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
+    setShowCartModal(true);
+    showPopup({
+      type: 'success',
+      title: 'Đã sao chép món ăn! 🎉',
+      message: `Đã thêm tất cả món ăn của "${colleagueOrder.userName}" vào giỏ hàng của bạn. Kiểm tra và chốt đơn ngay nhé!`
+    });
+  };
+
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalCartAmount = cart.reduce((sum, item) => sum + item.itemTotal, 0);
 
@@ -545,6 +574,18 @@ export default function UserView({ session: propSession, settings: propSettings,
                       {order.paymentStatus === 'PAID' ? '🟢 Đã CK' : '⏳ Chưa CK'}
                     </span>
                   </div>
+
+                  {/* 1-Click Copy Colleague Order Button */}
+                  {order.userName !== userName && !isClosed && (
+                    <button 
+                      className="btn btn-outline btn-sm" 
+                      onClick={() => handleCopyColleagueOrder(order)}
+                      style={{ width: '100%', marginTop: '6px', fontSize: '10px', padding: '3px 6px' }}
+                      title={`Sao chép tất cả món của ${order.userName} vào giỏ hàng của bạn`}
+                    >
+                      👯‍♂️ Đặt giống bạn này
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
