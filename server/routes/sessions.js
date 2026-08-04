@@ -16,14 +16,16 @@ router.get('/', (req, res) => {
   res.json({ success: true, sessions });
 });
 
-// GET single session by ID
+// GET single session by ID (Public for order participants)
 router.get('/:id', (req, res) => {
   const db = readDb();
   const session = db.sessions.find(s => s.id === req.params.id);
   if (!session) {
     return res.status(404).json({ success: false, message: "Không tìm thấy phiên đặt hàng" });
   }
-  res.json({ success: true, session, settings: db.settings });
+  // Strip secret adminSlug so users cannot inspect F12 Network to find admin panel
+  const { adminSlug, ...publicSession } = session;
+  res.json({ success: true, session: publicSession, settings: db.settings });
 });
 
 // CREATE new session
