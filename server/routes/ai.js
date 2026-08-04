@@ -118,6 +118,8 @@ router.post('/', async (req, res) => {
         id: `ai_item_${Date.now()}_${catIdx}_${itemIdx}`,
         name: item.name || item.itemName || 'Món ăn',
         price: typeof item.price === 'number' ? item.price : parseInt(item.price) || 30000,
+        isTopping: Boolean(item.isTopping),
+        isFreeGift: Boolean(item.isFreeGift),
         description: item.description || '',
         options: []
       }))

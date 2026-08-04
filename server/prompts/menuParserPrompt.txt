@@ -12,20 +12,24 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
 BẮT BUỘC xác định thuộc tính `"isMixMenu"` (boolean) và `"mixRules"`:
 
 ### 1. KHI NÀO `"isMixMenu": true`?
-Khi thực đơn có dạng cơm mix khay đồng giá / set combo tự chọn món (Ví dụ: "Mix 2 món 28k, mix 3 món 35k", "28k Cơm chiên trứng + gà tươi được mix 2 trong 4 topping", "Cơm tấm 30k chọn 2 món"...):
+Khi thực đơn có dạng cơm mix khay đồng giá / set combo tự chọn món (Ví dụ: "28k Cơm chiên trứng + gà tươi được mix 2 trong 4 topping. Free 1 canh, Free 1 cơm thêm", "Mix 2 món 28k, mix 3 món 35k"...):
 
 👉 Khi `"isMixMenu": true`:
-1. Trích xuất TẤT CẢ các món ăn lẻ / topping trong thực đơn vào `items`.
+1. BẮT BUỘC phân loại RÕ RÀNG các thuộc tính cho từng món trong `items`:
+   - Món thuộc danh sách Topping/món chọn giới hạn (ví dụ: Trứng ốp la, Xúc xích, Nem, Dồi): Gán `"isTopping": true`.
+   - Món Tặng Kèm Miễn Phí (ví dụ: Free canh rong biển, Free cơm thêm): Gán `"isFreeGift": true`, `"price": 0`.
+   - Món mua thêm có tiền (ví dụ: Canh thêm 2k, Cơm thêm 3k): Gán `"price": 2000` hoặc `3000`.
+
 2. Trích xuất ĐỘNG thông tin quy tắc `mixRules` trực tiếp từ văn bản thực đơn (KHÔNG HARDCODE):
-   - `mixTitle`: Tiêu đề hiển thị động trích xuất trực tiếp từ bài đăng.
-   - `basePrice`: Giá tiền suất chính (Ví dụ: 28000, 30000...).
-   - `maxAllowedItems`: Số lượng món/topping TỐI ĐA được chọn nếu bài viết có giới hạn (Ví dụ: 2 nếu bài viết ghi "mix 2 trong 4 topping"). Trả về null nếu không có giới hạn cố định.
-   - `instructionText`: Hướng dẫn chọn món trích xuất từ bài đăng (Ví dụ: "Được chọn tối đa 2 trong 4 topping").
-   - `tier1Count`: Số lượng món ở Gói 1 (Ví dụ: 2 nếu có gói 2 món/3 món).
-   - `tier1Price`: Giá tiền Gói 1 (Ví dụ: 28000).
-   - `tier2Count`: Số lượng món ở Gói 2 (Ví dụ: 3).
-   - `tier2Price`: Giá tiền Gói 2 (Ví dụ: 35000).
-   - `extraItemPrice`: Giá tiền cộng thêm mỗi món dư nếu chọn quá Gói 2 (Ví dụ: 7000).
+   - `mixTitle`: Tiêu đề hiển thị động trích xuất từ bài đăng.
+   - `basePrice`: Giá tiền suất chính (Ví dụ: 28000).
+   - `maxAllowedItems`: Số lượng Topping TỐI ĐA được chọn (Ví dụ: 2 nếu bài ghi "mix 2 trong 4 topping"). Chỉ áp dụng cho các món có `isTopping: true`.
+   - `instructionText`: Hướng dẫn chọn topping (Ví dụ: "Được chọn mix tối đa 2 trong 4 topping").
+   - `tier1Count`: Số món Gói 1 nếu là menu gói mix 2 món/3 món.
+   - `tier1Price`: Giá tiền Gói 1.
+   - `tier2Count`: Số món Gói 2.
+   - `tier2Price`: Giá tiền Gói 2.
+   - `extraItemPrice`: Giá tiền cộng thêm mỗi món dư.
 
 ### 2. KHI NÀO `"isMixMenu": false`?
 Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, sinh tố, bún, phở, mì cay, lẩu...):
@@ -36,7 +40,7 @@ Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, si
 ## QUY TẮC BẮT BUỘC KHÁC
 
 ### ✅ GIỮ LẠI
-- Phân biệt RÕ RÀNG giữa món Free (0đ) và món mua thêm có tiền (ví dụ: "Free 1 cơm thêm" -> price: 0; "cơm thêm 3k" -> price: 3000).
+- Phân biệt RÕ RÀNG giữa món FreeGift (0đ) và món mua thêm có tiền (ví dụ: "Free 1 cơm thêm" -> price: 0, isFreeGift: true; "cơm thêm 3k" -> price: 3000).
 
 ### ❌ BỎ QUA HOÀN TOÀN
 - Tiêu đề/banner marketing: "HOT HOT HOT", "KHAI TRƯƠNG".
@@ -47,7 +51,7 @@ Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, si
 ## ĐỊNH DẠNG ĐẦU RA (JSON ONLY)
 Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có ```json, KHÔNG có lời giải thích).
 
-Ví dụ 1: Menu Mix Topping Có Giới Hạn Max (`maxAllowedItems: 2`)
+Ví dụ (Menu Mix Topping + Free Gift Tặng Kèm):
 ```json
 {
   "isMixMenu": true,
@@ -61,39 +65,14 @@ Ví dụ 1: Menu Mix Topping Có Giới Hạn Max (`maxAllowedItems: 2`)
     {
       "category": "Món Chính & Topping Mix",
       "items": [
-        { "name": "Trứng ốp la", "price": 0 },
-        { "name": "Xúc xích", "price": 0 },
-        { "name": "Nem", "price": 0 },
-        { "name": "Dồi", "price": 0 },
-        { "name": "Canh rong biển", "price": 0 },
-        { "name": "Cơm thêm", "price": 0 },
+        { "name": "Trứng ốp la", "price": 0, "isTopping": true },
+        { "name": "Xúc xích", "price": 0, "isTopping": true },
+        { "name": "Nem", "price": 0, "isTopping": true },
+        { "name": "Dồi", "price": 0, "isTopping": true },
+        { "name": "Canh rong biển (Free)", "price": 0, "isFreeGift": true },
+        { "name": "Cơm thêm (Free)", "price": 0, "isFreeGift": true },
         { "name": "Canh thêm", "price": 2000 },
         { "name": "Cơm thêm", "price": 3000 }
-      ]
-    }
-  ]
-}
-```
-
-Ví dụ 2: Menu Cơm Mix Gói Tier (2 món 28k / 3 món 35k)
-```json
-{
-  "isMixMenu": true,
-  "mixRules": {
-    "mixTitle": "Cơm Minh Thư – Đồng giá 28K Mix 2 món 28K, Mix 3 món 35K",
-    "tier1Count": 2,
-    "tier1Price": 28000,
-    "tier2Count": 3,
-    "tier2Price": 35000,
-    "extraItemPrice": 7000,
-    "instructionText": "Chọn 1-2 món (28k) hoặc 3 món (35k)"
-  },
-  "categories": [
-    {
-      "category": "Cơm Mix Món Hôm Nay",
-      "items": [
-        { "name": "Đùi gà chiên muối ớt", "price": 28000 },
-        { "name": "Thịt kho trứng", "price": 28000 }
       ]
     }
   ]

@@ -512,7 +512,26 @@ export default function UserView({ session: propSession, settings: propSettings,
             const extraItemPrice = typeof rules.extraItemPrice === 'number' ? rules.extraItemPrice : (tier2Price - tier1Price);
 
             const allItems = menuData.flatMap(cat => cat.items || []);
-            const freeMixItems = allItems.filter(it => it.price === 0 || it.name.toLowerCase().includes('(free)'));
+            
+            // Toppings that count towards maxAllowedItems
+            const toppingItems = allItems.filter(it => 
+              it.isTopping || 
+              (it.price === 0 && !it.isFreeGift && !it.name.toLowerCase().includes('(free)'))
+            );
+
+            // Free gifts (0đ) that can be checked freely without affecting topping limit
+            const freeGiftItems = allItems.filter(it => 
+              it.isFreeGift || 
+              it.name.toLowerCase().includes('(free)')
+            );
+
+            // Fallback: If AI didn't tag isTopping/isFreeGift, all 0đ items are toppings
+            const mixSelectionItems = toppingItems.length > 0 ? toppingItems : allItems.filter(it => it.price === 0);
+
+            // Count only selected toppings towards maxAllowed
+            const selectedToppingsCount = selectedMixDishes.filter(dishName => 
+              mixSelectionItems.some(it => it.name === dishName)
+            ).length;
 
             const count = selectedMixDishes.length;
             let selectedPrice = 0;
@@ -525,7 +544,6 @@ export default function UserView({ session: propSession, settings: propSettings,
             } else if (count <= tier2Count) {
               selectedPrice = tier2Price;
             } else {
-              // Dynamically add extraItemPrice for dishes beyond tier2Count
               selectedPrice = tier2Price + (count - tier2Count) * extraItemPrice;
             }
 
@@ -536,10 +554,10 @@ export default function UserView({ session: propSession, settings: propSettings,
                     {mixTitle}
                   </span>
                   <span className="status-badge status-open" style={{ fontSize: '10px' }}>
-                    {count === 0 
+                    {selectedToppingsCount === 0 
                       ? 'Chưa chọn món' 
                       : maxAllowed 
-                        ? `Đã chọn ${count}/${maxAllowed} món (${selectedPrice.toLocaleString('vi-VN')}đ)` 
+                        ? `Đã chọn ${selectedToppingsCount}/${maxAllowed} Topping (${selectedPrice.toLocaleString('vi-VN')}đ)` 
                         : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`
                     }
                   </span>
@@ -549,12 +567,9 @@ export default function UserView({ session: propSession, settings: propSettings,
                   {instructionText}
                 </p>
 
-                {/* Checkbox List for all dishes */}
+                {/* Section 1: Checkbox List for Toppings (Counted) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '6px', marginBottom: '8px' }}>
-                  {(freeMixItems.length > 0 ? freeMixItems : allItems).map((item, idx) => {
-                    const isExtraItem = item.price > 0 && (item.name.toLowerCase().includes('thêm') || item.price < 5000);
-                    if (isExtraItem) return null;
-
+                  {mixSelectionItems.map((item, idx) => {
                     const isChecked = selectedMixDishes.includes(item.name);
                     return (
                       <label 
@@ -579,11 +594,11 @@ export default function UserView({ session: propSession, settings: propSettings,
                           checked={isChecked}
                           onChange={e => {
                             if (e.target.checked) {
-                              if (maxAllowed && selectedMixDishes.length >= maxAllowed) {
+                              if (maxAllowed && selectedToppingsCount >= maxAllowed) {
                                 showPopup({
                                   type: 'warning',
-                                  title: 'Đã đạt giới hạn chọn món! ⚠️',
-                                  message: `Suất cơm này chỉ cho phép chọn tối đa ${maxAllowed} món / topping!`
+                                  title: 'Đã đạt giới hạn chọn topping! ⚠️',
+                                  message: `Suất cơm này chỉ cho phép chọn tối đa ${maxAllowed} topping!`
                                 });
                                 return;
                               }
@@ -599,6 +614,52 @@ export default function UserView({ session: propSession, settings: propSettings,
                     );
                   })}
                 </div>
+
+                {/* Section 2: Free Gifts (Uncounted Add-ons) */}
+                {freeGiftItems.length > 0 && (
+                  <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                      🎁 TẶNG KÈM MIỄN PHÍ (Không tính vào giới hạn topping):
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {freeGiftItems.map((item, idx) => {
+                        const isChecked = selectedMixDishes.includes(item.name);
+                        return (
+                          <label 
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              background: isChecked ? 'var(--badge-bg)' : 'var(--bg-card)',
+                              border: isChecked ? '1px solid var(--text-main)' : '1px dashed var(--border-color)',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              color: 'var(--text-main)',
+                              fontWeight: isChecked ? '700' : '400'
+                            }}
+                          >
+                            <input 
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setSelectedMixDishes(prev => [...prev, item.name]);
+                                } else {
+                                  setSelectedMixDishes(prev => prev.filter(n => n !== item.name));
+                                }
+                              }}
+                              style={{ accentColor: 'var(--text-main)' }}
+                            />
+                            <span>{item.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Summary & Add to Cart Button */}
                 <div className="flex-between" style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
