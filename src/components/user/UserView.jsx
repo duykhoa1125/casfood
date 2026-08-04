@@ -42,6 +42,10 @@ export default function UserView({ session: propSession, settings: propSettings,
   const [previewImage, setPreviewImage] = useState(null);
   const [showAdminQrSection, setShowAdminQrSection] = useState(false);
 
+  // Interactive Mix Box State
+  const [selectedMixDishes, setSelectedMixDishes] = useState([]);
+  const [mixExtraRice, setMixExtraRice] = useState(false);
+
   // Live Session Orders State
   const [sessionOrders, setSessionOrders] = useState([]);
 
@@ -483,6 +487,129 @@ export default function UserView({ session: propSession, settings: propSettings,
               </div>
             )}
           </div>
+
+          {/* Interactive Mix Box Builder Card */}
+          {menuData.length > 0 && (
+            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px', margin: '6px 0 10px' }}>
+              <div className="flex-between" style={{ marginBottom: '6px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '4px' }}>
+                <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY (1-2 món = 28k | 3 món = 35k)
+                </span>
+                <span className="status-badge status-open" style={{ fontSize: '10px' }}>
+                  {selectedMixDishes.length === 0 ? 'Chưa chọn món' : selectedMixDishes.length <= 2 ? 'Gói 28.000đ' : 'Gói 35.000đ'}
+                </span>
+              </div>
+
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:
+              </p>
+
+              {/* Checkbox List for all dishes */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '6px', marginBottom: '8px' }}>
+                {menuData.flatMap(cat => cat.items || []).map((item, idx) => {
+                  const isExtraItem = item.name.toLowerCase().includes('cơm thêm') || item.price < 10000;
+                  if (isExtraItem) return null;
+
+                  const isChecked = selectedMixDishes.includes(item.name);
+                  return (
+                    <label 
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: isChecked ? 'var(--badge-bg)' : 'var(--bg-card)',
+                        border: isChecked ? '1px solid var(--text-main)' : '1px solid var(--border-color)',
+                        padding: '5px 8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        color: 'var(--text-main)',
+                        fontWeight: isChecked ? '700' : '400',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <input 
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedMixDishes(prev => [...prev, item.name]);
+                          } else {
+                            setSelectedMixDishes(prev => prev.filter(n => n !== item.name));
+                          }
+                        }}
+                        style={{ accentColor: 'var(--text-main)' }}
+                      />
+                      <span>{item.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {/* Extra Option: Cơm Thêm */}
+              <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginBottom: '8px' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '11px', color: 'var(--text-main)', fontWeight: '600' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={mixExtraRice} 
+                    onChange={e => setMixExtraRice(e.target.checked)}
+                    style={{ accentColor: 'var(--text-main)' }}
+                  />
+                  🍚 Thêm 1 bịch cơm thêm (+2.000đ)
+                </label>
+              </div>
+
+              {/* Summary & Add to Cart Button */}
+              <div className="flex-between" style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    Đã chọn: <strong style={{ color: 'var(--text-main)' }}>{selectedMixDishes.length > 0 ? selectedMixDishes.join(' + ') : 'Chưa chọn món'}</strong>
+                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', marginTop: '2px' }}>
+                    Thành tiền: {(
+                      (selectedMixDishes.length === 0 ? 0 : selectedMixDishes.length <= 2 ? 28000 : 35000) + (mixExtraRice ? 2000 : 0)
+                    ).toLocaleString('vi-VN')}đ
+                  </div>
+                </div>
+
+                <button 
+                  className="btn btn-primary btn-sm"
+                  disabled={selectedMixDishes.length === 0 || isClosed}
+                  onClick={() => {
+                    const boxPrice = selectedMixDishes.length <= 2 ? 28000 : 35000;
+                    const totalPrice = boxPrice + (mixExtraRice ? 2000 : 0);
+                    const boxName = `Hộp Cơm ${selectedMixDishes.length <= 2 ? '1-2 Món' : '3 Món'} (${selectedMixDishes.join(', ')}${mixExtraRice ? ' + Cơm thêm' : ''})`;
+
+                    const cartItem = {
+                      cartId: `cart_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                      id: `mix_${Date.now()}`,
+                      name: boxName,
+                      price: totalPrice,
+                      quantity: 1,
+                      selectedOptions: [],
+                      notes: '',
+                      itemTotal: totalPrice
+                    };
+
+                    setCart(prev => [...prev, cartItem]);
+                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+                    setSelectedMixDishes([]);
+                    setMixExtraRice(false);
+                    setShowCartModal(true);
+                    showPopup({
+                      type: 'success',
+                      title: 'Đã thêm hộp cơm mix! 🎉',
+                      message: `Đã thêm "${boxName}" (${totalPrice.toLocaleString('vi-VN')}đ) vào giỏ hàng của bạn!`
+                    });
+                  }}
+                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                >
+                  <Plus size={13} /> Thêm Hộp Cơm Vào Giỏ
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 2-Column Food Grid Layout */}
           <div>

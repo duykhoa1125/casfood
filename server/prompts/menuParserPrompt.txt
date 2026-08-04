@@ -10,19 +10,16 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
 ## QUY TẮC BẮT BUỘC
 
 ### ✅ GIỮ LẠI (đây là thông tin quan trọng)
+- Tách TẤT CẢ các món ăn / thức uống thực sự xuất hiện trong danh sách (kể cả món đánh số 1, 2, 3... như "1. Đùi gà", "2. Thịt kho").
 - Giá tiền: nhận dạng mọi format (`28k`, `35k`, `28.000`, `35.000đ`...):
-  - Với các menu "Đồng giá Mix 2 món 28k / Mix 3 món 35k": Trích xuất thành các "Suất Cơm Mix Món" làm item chính, và đưa toàn bộ danh sách các món ăn lẻ hôm nay vào nhóm tùy chọn `options` (`Món 1`, `Món 2`, `Món 3`) với giá 0đ.
+  - Với các menu "Đồng giá Mix 2 món 28k / Mix 3 món 35k": BẮT BUỘC trích xuất TẤT CẢ các món ăn lẻ trong bài đăng vào mảng `items` với mức giá cơ sở 28000.
   - Tách riêng món mua thêm như "Cơm thêm 2k" (giá 2000).
 
-### 🍱 XỬ LÝ ĐẶC BIỆT CHO MENU CƠM MIX MÓN (ĐỒNG GIÁ 28K MIX 2 MÓN - 35K MIX 3 MÓN)
+### 🍱 XỬ LÝ NÂNG CAO CHO MENU CƠM MIX MÓN / CƠM BÌNH DÂN (ĐỒNG GIÁ 28K - 35K)
 Khi gặp menu có tiêu đề "MIX 2 MÓN 28K MIX 3 MÓN 35K" kèm danh sách các món ăn lẻ (1. Đùi gà, 2. Thịt kho, 3. Sườn kho...):
-1. Tạo item chính thứ 1: `"Suất Cơm 1 - 2 Món"` với giá `28000`.
-   - `options` gồm 2 nhóm:
-     - Nhóm 1: `title`: "Món 1 (Món chính)", `choices`: Danh sách tất cả các món ăn hôm nay (Đùi gà chiên muối ớt, Thịt kho trứng, Sườn kho thơm...).
-     - Nhóm 2: `title`: "Món 2 (Mix kèm - 0đ)", `choices`: [{ "name": "Không mix (Chỉ ăn 1 món chính)", "price": 0 }, ...Danh sách tất cả các món còn lại].
-2. Tạo item chính thứ 2: `"Suất Cơm 3 Món"` với giá `35000`.
-   - `options` gồm 3 nhóm: "Món 1", "Món 2", "Món 3" (đưa danh sách tất cả các món ăn hôm nay vào).
-3. Tạo các item mua thêm riêng biệt: "Cơm thêm 1 bịch" giá 2000.
+1. BẮT BUỘC trích xuất TẤT CẢ 8-10 món ăn lẻ được liệt kê vào danh sách `items` (Ví dụ: Đùi gà chiên muối ớt, Thịt kho trứng, Sườn kho thơm, Vịt kho gừng, Trứng chiên thịt bằm, Ếch xào sả ớt, Đậu hũ nhồi thịt, Cá basa kho tiêu...).
+2. Gán giá mặc định cho từng món ăn lẻ là 28000.
+3. Tách riêng các món mua thêm như "Cơm thêm 1 bịch" thành item riêng với giá 2000.
 
 ### ❌ BỎ QUA HOÀN TOÀN (không được nhét vào danh sách món)
 - Tiêu đề/banner như: "HOT HOT HOT", "ĐẶC BIỆT NHẤT", "KHAI TRƯƠNG"
@@ -34,7 +31,7 @@ Khi gặp menu có tiêu đề "MIX 2 MÓN 28K MIX 3 MÓN 35K" kèm danh sách c
 - Đường kẻ trang trí: `━━━━━`, `----`, `====`, `~~~~`
 
 ### 📦 PHÂN NHÓM THÔNG MINH
-- Tự phát hiện nhóm món từ context (ví dụ: "Suất Cơm Mix Món Hôm Nay", "Thức Uống", "Tráng Miệng")
+- Đặt tên nhóm món chứa từ "Mix" nếu là cơm mix (Ví dụ: "Cơm Mix Món (1-2 món 28k, 3 món 35k)")
 - Tên nhóm: viết hoa chữ cái đầu mỗi từ, ngắn gọn, không emoji
 
 ---
@@ -46,58 +43,47 @@ Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có 
 {
   "categories": [
     {
-      "category": "Suất Cơm Mix Món Hôm Nay",
+      "category": "Cơm Mix Món (1-2 món 28k, 3 món 35k)",
       "items": [
         {
-          "name": "Suất Cơm 1 - 2 Món (28k)",
+          "name": "Đùi gà chiên muối ớt",
           "price": 28000,
-          "description": "Đồng giá 28k (Ăn 1 món hoặc mix 2 món tùy chọn)",
-          "options": [
-            {
-              "title": "Món 1 (Món chính)",
-              "choices": [
-                { "name": "Đùi gà chiên muối ớt", "price": 0 },
-                { "name": "Thịt kho trứng", "price": 0 },
-                { "name": "Sườn kho thơm", "price": 0 }
-              ]
-            },
-            {
-              "title": "Món 2 (Mix kèm - 0đ)",
-              "choices": [
-                { "name": "Không mix (Chỉ ăn 1 món chính)", "price": 0 },
-                { "name": "Thịt kho trứng", "price": 0 },
-                { "name": "Sườn kho thơm", "price": 0 }
-              ]
-            }
-          ]
+          "description": ""
         },
         {
-          "name": "Suất Cơm 3 Món (35k)",
-          "price": 35000,
-          "description": "Đồng giá 35k (Mix 3 món tùy chọn)",
-          "options": [
-            {
-              "title": "Món 1",
-              "choices": [
-                { "name": "Đùi gà chiên muối ớt", "price": 0 },
-                { "name": "Thịt kho trứng", "price": 0 }
-              ]
-            },
-            {
-              "title": "Món 2",
-              "choices": [
-                { "name": "Sườn kho thơm", "price": 0 },
-                { "name": "Vịt kho gừng", "price": 0 }
-              ]
-            },
-            {
-              "title": "Món 3",
-              "choices": [
-                { "name": "Trứng chiên thịt bằm", "price": 0 },
-                { "name": "Cá basa kho tiêu", "price": 0 }
-              ]
-            }
-          ]
+          "name": "Thịt kho trứng",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Sườn kho thơm",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Vịt kho gừng",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Trứng chiên thịt bằm",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Ếch xào sả ớt",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Đậu hũ nhồi thịt",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Cá basa kho tiêu",
+          "price": 28000,
+          "description": ""
         },
         {
           "name": "Cơm thêm 1 bịch",
