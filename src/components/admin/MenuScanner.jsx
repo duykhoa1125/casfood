@@ -247,10 +247,28 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                     <button className="btn btn-outline btn-sm" onClick={() => handleActiveAddItem(catIdx)} style={{ padding: '1px 5px', fontSize: '10px' }}><Plus size={10} /></button>
                   </div>
                   {cat.items?.map((item, itemIdx) => (
-                    <div key={item.id || itemIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px', marginBottom: '4px' }}>
-                      <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
-                      <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
-                      <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
+                    <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px' }}>
+                        <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
+                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
+                        <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
+                      </div>
+
+                      {/* Options Preview */}
+                      {item.options && item.options.length > 0 && (
+                        <div style={{ marginLeft: '10px', paddingLeft: '6px', borderLeft: '2px solid var(--border-color)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {item.options.map((optGroup, ogIdx) => (
+                            <div key={ogIdx} style={{ marginTop: '2px' }}>
+                              <strong style={{ color: 'var(--text-main)' }}>⚙️ {optGroup.title}:</strong>{' '}
+                              {optGroup.choices?.map((c, cIdx) => (
+                                <span key={cIdx} style={{ background: 'var(--bg-card)', padding: '1px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', marginRight: '3px', display: 'inline-block', marginTop: '2px' }}>
+                                  {c.name} {c.price ? `(+${c.price.toLocaleString('vi-VN')}đ)` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -376,10 +394,28 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                   <button className="btn btn-outline btn-sm" onClick={() => handleAddItem(catIdx)} style={{ padding: '1px 5px', fontSize: '10px' }}><Plus size={10} /></button>
                 </div>
                 {cat.items.map((item, itemIdx) => (
-                  <div key={item.id || itemIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px', marginBottom: '4px' }}>
-                    <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
-                    <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
-                    <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} onClick={() => handleRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
+                  <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px' }}>
+                      <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
+                      <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
+                      <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} onClick={() => handleRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
+                    </div>
+
+                    {/* Options Preview */}
+                    {item.options && item.options.length > 0 && (
+                      <div style={{ marginLeft: '10px', paddingLeft: '6px', borderLeft: '2px solid var(--border-color)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {item.options.map((optGroup, ogIdx) => (
+                          <div key={ogIdx} style={{ marginTop: '2px' }}>
+                            <strong style={{ color: 'var(--text-main)' }}>⚙️ {optGroup.title}:</strong>{' '}
+                            {optGroup.choices?.map((c, cIdx) => (
+                              <span key={cIdx} style={{ background: 'var(--bg-card)', padding: '1px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', marginRight: '3px', display: 'inline-block', marginTop: '2px' }}>
+                                {c.name} {c.price ? `(+${c.price.toLocaleString('vi-VN')}đ)` : ''}
+                              </span>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -10,19 +10,16 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
 ## QUY TẮC BẮT BUỘC
 
 ### ✅ GIỮ LẠI (đây là thông tin quan trọng)
-- Tên món ăn / thức uống thực sự (kể cả viết thường, sai chính tả nhẹ, có emoji đầu dòng)
-- Giá tiền: nhận dạng mọi format:
-  - `30k`, `30K`, `30.000`, `30,000`, `30.000đ`, `30.000₫`, `30000đ`, `30 000`
-  - Giá có thể nằm trên cùng dòng hoặc dòng liền kề SAU tên món
-  - Giá có thể viết bằng chữ: "ba mươi nghìn" → 30000
-- Tên biến thể/combo: "Combo 1", "Set A", "Mix 2 Món 28k", "Mix 3 Món 35k"
-- Topping, size, tùy chọn: nếu có thể xác định được giá riêng hoặc danh sách món chọn kèm
+- Tách TẤT CẢ các món ăn / thức uống thực sự xuất hiện trong danh sách (kể cả món đánh số 1, 2, 3... như "1. Đùi gà", "2. Thịt kho").
+- Giá tiền: nhận dạng mọi format (`28k`, `35k`, `28.000`, `35.000đ`...):
+  - Với các menu "Đồng giá Mix 2 món 28k / Mix 3 món 35k": gán giá mặc định cho từng món ăn lẻ là 28000 (mức giá cơ sở).
+  - Tách riêng món mua thêm như "Cơm thêm 2k" (giá 2000).
 
 ### 🍱 XỬ LÝ NÂNG CAO CHO MENU CƠM MIX MÓN / CƠM BÌNH DÂN ĐỒNG GIÁ
-Khi gặp menu có cấu trúc: "Mix 2 món 28k", "Mix 3 món 35k", "Đồng giá 28k chọn 2 món" kèm danh sách các món ăn bên dưới (như Đùi gà, Thịt kho, Cá kho...):
-1. Tạo ra các suất món ăn chính theo Combo (Ví dụ: "Suất Cơm Mix 2 Món" giá 28000, "Suất Cơm Mix 3 Món" giá 35000).
-2. Tạo mảng `options` cho suất cơm đó, đưa toàn bộ danh sách các món ăn lẻ trong ngày vào `choices` của nhóm "Chọn món ăn" (mỗi món giá 0đ).
-3. Nếu có "Cơm thêm 2k", "Trứng thêm 5k" → Đưa vào nhóm tùy chọn "Tùy chọn thêm".
+Khi gặp menu có tiêu đề "Mix 2 món 28k, Mix 3 món 35k" kèm danh sách các món ăn bên dưới (1. Đùi gà, 2. Thịt kho, 3. Sườn kho...):
+1. BẮT BUỘC phải trích xuất TẤT CẢ các món ăn lẻ được liệt kê vào danh sách `items` (Ví dụ: Đùi gà chiên muối ớt, Thịt kho trứng, Sườn kho thơm...).
+2. Nếu có món Combo như "Suất Cơm Mix 3 Món (35k)" hoặc "Cơm thêm (2k)", trích xuất thành các món riêng biệt trong danh sách.
+3. Đảm bảo số lượng món trích xuất được khớp chính xác với số món có trong bài đăng của quán.
 
 ### ❌ BỎ QUA HOÀN TOÀN (không được nhét vào danh sách món)
 - Tiêu đề/banner như: "HOT HOT HOT", "ĐẶC BIỆT NHẤT", "KHAI TRƯƠNG"
@@ -34,8 +31,7 @@ Khi gặp menu có cấu trúc: "Mix 2 món 28k", "Mix 3 món 35k", "Đồng gi�
 - Đường kẻ trang trí: `━━━━━`, `----`, `====`, `~~~~`
 
 ### 📦 PHÂN NHÓM THÔNG MINH
-- Tự phát hiện nhóm món từ context (ví dụ: "Cơm Mix Món", "Thức Uống", "Tráng Miệng")
-- Nếu toàn bộ menu cùng một loại → dùng một nhóm duy nhất tên phù hợp
+- Tự phát hiện nhóm món từ context (ví dụ: "Cơm Mix Món (Đồng Giá 28k - 35k)", "Thức Uống", "Tráng Miệng")
 - Tên nhóm: viết hoa chữ cái đầu mỗi từ, ngắn gọn, không emoji
 
 ---
@@ -47,28 +43,32 @@ Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có 
 {
   "categories": [
     {
-      "category": "Suất Cơm Mix Món",
+      "category": "Cơm Mix Món Hôm Nay",
       "items": [
         {
-          "name": "Suất Cơm Mix 2 Món",
+          "name": "Đùi gà chiên muối ớt",
           "price": 28000,
-          "description": "Chọn 2 món ăn bất kỳ",
-          "options": [
-            {
-              "title": "Chọn món ăn",
-              "choices": [
-                { "name": "Đùi gà chiên muối ớt", "price": 0 },
-                { "name": "Thịt kho trứng", "price": 0 },
-                { "name": "Sườn kho thơm", "price": 0 }
-              ]
-            },
-            {
-              "title": "Tùy chọn thêm",
-              "choices": [
-                { "name": "Cơm thêm 1 bịch", "price": 2000 }
-              ]
-            }
-          ]
+          "description": ""
+        },
+        {
+          "name": "Thịt kho trứng",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Sườn kho thơm",
+          "price": 28000,
+          "description": ""
+        },
+        {
+          "name": "Suất Cơm Mix 3 Món",
+          "price": 35000,
+          "description": ""
+        },
+        {
+          "name": "Cơm thêm 1 bịch",
+          "price": 2000,
+          "description": ""
         }
       ]
     }
