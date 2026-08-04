@@ -499,6 +499,8 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const rules = session?.mixRules || {};
             const mixTitle = rules.mixTitle || '🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY';
+            const maxAllowed = typeof rules.maxAllowedItems === 'number' ? rules.maxAllowedItems : null;
+            const instructionText = rules.instructionText || (maxAllowed ? `Được chọn tối đa ${maxAllowed} món / topping:` : 'Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:');
             
             // Dynamic tier rules extracted by AI (Zero hardcoding)
             const tier1Count = typeof rules.tier1Count === 'number' ? rules.tier1Count : 2;
@@ -516,6 +518,8 @@ export default function UserView({ session: propSession, settings: propSettings,
             let selectedPrice = 0;
             if (count === 0) {
               selectedPrice = 0;
+            } else if (rules.basePrice) {
+              selectedPrice = rules.basePrice;
             } else if (count <= tier1Count) {
               selectedPrice = tier1Price;
             } else if (count <= tier2Count) {
@@ -532,12 +536,17 @@ export default function UserView({ session: propSession, settings: propSettings,
                     {mixTitle}
                   </span>
                   <span className="status-badge status-open" style={{ fontSize: '10px' }}>
-                    {count === 0 ? 'Chưa chọn món' : count <= tier1Count ? `Gói ${tier1Count} món (${selectedPrice.toLocaleString('vi-VN')}đ)` : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`}
+                    {count === 0 
+                      ? 'Chưa chọn món' 
+                      : maxAllowed 
+                        ? `Đã chọn ${count}/${maxAllowed} món (${selectedPrice.toLocaleString('vi-VN')}đ)` 
+                        : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`
+                    }
                   </span>
                 </div>
 
                 <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:
+                  {instructionText}
                 </p>
 
                 {/* Checkbox List for all dishes */}
@@ -570,6 +579,14 @@ export default function UserView({ session: propSession, settings: propSettings,
                           checked={isChecked}
                           onChange={e => {
                             if (e.target.checked) {
+                              if (maxAllowed && selectedMixDishes.length >= maxAllowed) {
+                                showPopup({
+                                  type: 'warning',
+                                  title: 'Đã đạt giới hạn chọn món! ⚠️',
+                                  message: `Suất cơm này chỉ cho phép chọn tối đa ${maxAllowed} món / topping!`
+                                });
+                                return;
+                              }
                               setSelectedMixDishes(prev => [...prev, item.name]);
                             } else {
                               setSelectedMixDishes(prev => prev.filter(n => n !== item.name));

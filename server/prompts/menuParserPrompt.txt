@@ -12,17 +12,20 @@ Nhận vào một đoạn text thô (có thể rất lộn xộn, đầy emoji, 
 BẮT BUỘC xác định thuộc tính `"isMixMenu"` (boolean) và `"mixRules"`:
 
 ### 1. KHI NÀO `"isMixMenu": true`?
-Khi thực đơn có dạng cơm mix khay đồng giá / set combo tự chọn món (Ví dụ: "Mix 2 món 28k, mix 3 món 35k", "Cơm tấm 30k chọn 2 món, 40k chọn 3 món", "Combo 25k chọn 2 topping"...):
+Khi thực đơn có dạng cơm mix khay đồng giá / set combo tự chọn món (Ví dụ: "Mix 2 món 28k, mix 3 món 35k", "28k Cơm chiên trứng + gà tươi được mix 2 trong 4 topping", "Cơm tấm 30k chọn 2 món"...):
 
 👉 Khi `"isMixMenu": true`:
 1. Trích xuất TẤT CẢ các món ăn lẻ / topping trong thực đơn vào `items`.
-2. Trích xuất ĐỘNG thông tin quy tắc giá `mixRules` từ chính văn bản thực đơn (KHÔNG ĐƯỢC HARDCODE GIÁ):
-   - `mixTitle`: Tiêu đề hiển thị động được trích xuất trực tiếp từ bài đăng.
-   - `tier1Count`: Số lượng món/topping tối đa cho Mức 1 (Ví dụ: 2).
-   - `tier1Price`: Giá tiền Mức 1 theo đúng bài đăng (Ví dụ: 28000, 30000, 25000...).
-   - `tier2Count`: Số lượng món/topping tối đa cho Mức 2 (Ví dụ: 3).
-   - `tier2Price`: Giá tiền Mức 2 theo đúng bài đăng (Ví dụ: 35000, 40000, 30000...).
-   - `extraItemPrice`: Giá tiền cộng thêm cho mỗi món dư sau Mức 2 (Mặc định = tier2Price - tier1Price).
+2. Trích xuất ĐỘNG thông tin quy tắc `mixRules` trực tiếp từ văn bản thực đơn (KHÔNG HARDCODE):
+   - `mixTitle`: Tiêu đề hiển thị động trích xuất trực tiếp từ bài đăng.
+   - `basePrice`: Giá tiền suất chính (Ví dụ: 28000, 30000...).
+   - `maxAllowedItems`: Số lượng món/topping TỐI ĐA được chọn nếu bài viết có giới hạn (Ví dụ: 2 nếu bài viết ghi "mix 2 trong 4 topping"). Trả về null nếu không có giới hạn cố định.
+   - `instructionText`: Hướng dẫn chọn món trích xuất từ bài đăng (Ví dụ: "Được chọn tối đa 2 trong 4 topping").
+   - `tier1Count`: Số lượng món ở Gói 1 (Ví dụ: 2 nếu có gói 2 món/3 món).
+   - `tier1Price`: Giá tiền Gói 1 (Ví dụ: 28000).
+   - `tier2Count`: Số lượng món ở Gói 2 (Ví dụ: 3).
+   - `tier2Price`: Giá tiền Gói 2 (Ví dụ: 35000).
+   - `extraItemPrice`: Giá tiền cộng thêm mỗi món dư nếu chọn quá Gói 2 (Ví dụ: 7000).
 
 ### 2. KHI NÀO `"isMixMenu": false`?
 Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, sinh tố, bún, phở, mì cay, lẩu...):
@@ -44,7 +47,35 @@ Các thực đơn thông thường bán món lẻ trực tiếp (Sữa hạt, si
 ## ĐỊNH DẠNG ĐẦU RA (JSON ONLY)
 Chỉ trả về JSON thuần túy hợp lệ (KHÔNG kèm markdown, KHÔNG có ```json, KHÔNG có lời giải thích).
 
-Ví dụ 1: Menu Cơm Mix Đồ Ăn
+Ví dụ 1: Menu Mix Topping Có Giới Hạn Max (`maxAllowedItems: 2`)
+```json
+{
+  "isMixMenu": true,
+  "mixRules": {
+    "mixTitle": "Cơm Chiên Trứng + Gà Tươi (28K)",
+    "basePrice": 28000,
+    "maxAllowedItems": 2,
+    "instructionText": "Được chọn mix tối đa 2 trong 4 topping"
+  },
+  "categories": [
+    {
+      "category": "Món Chính & Topping Mix",
+      "items": [
+        { "name": "Trứng ốp la", "price": 0 },
+        { "name": "Xúc xích", "price": 0 },
+        { "name": "Nem", "price": 0 },
+        { "name": "Dồi", "price": 0 },
+        { "name": "Canh rong biển", "price": 0 },
+        { "name": "Cơm thêm", "price": 0 },
+        { "name": "Canh thêm", "price": 2000 },
+        { "name": "Cơm thêm", "price": 3000 }
+      ]
+    }
+  ]
+}
+```
+
+Ví dụ 2: Menu Cơm Mix Gói Tier (2 món 28k / 3 món 35k)
 ```json
 {
   "isMixMenu": true,
@@ -54,31 +85,15 @@ Ví dụ 1: Menu Cơm Mix Đồ Ăn
     "tier1Price": 28000,
     "tier2Count": 3,
     "tier2Price": 35000,
-    "extraItemPrice": 7000
+    "extraItemPrice": 7000,
+    "instructionText": "Chọn 1-2 món (28k) hoặc 3 món (35k)"
   },
   "categories": [
     {
       "category": "Cơm Mix Món Hôm Nay",
       "items": [
         { "name": "Đùi gà chiên muối ớt", "price": 28000 },
-        { "name": "Thịt kho trứng", "price": 28000 },
-        { "name": "Sườn kho thơm", "price": 28000 },
-        { "name": "Cơm thêm 1 bịch", "price": 2000 }
-      ]
-    }
-  ]
-}
-```
-
-Ví dụ 2: Menu Nước Uống / Món Lẻ Thông Thường
-```json
-{
-  "isMixMenu": false,
-  "categories": [
-    {
-      "category": "Sữa Hạt",
-      "items": [
-        { "name": "Sữa hạt số 4", "price": 20000 }
+        { "name": "Thịt kho trứng", "price": 28000 }
       ]
     }
   ]
