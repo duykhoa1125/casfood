@@ -86,7 +86,7 @@ body {
   margin-bottom: 10px;
 }
 
-/* Admin Responsive Two-Column Grid */
+/* Admin & User Responsive Two-Column Grid */
 .admin-grid {
   display: grid;
   grid-template-columns: 380px 1fr;
@@ -94,8 +94,15 @@ body {
   align-items: start;
 }
 
+.user-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 14px;
+  align-items: start;
+}
+
 @media (max-width: 900px) {
-  .admin-grid {
+  .admin-grid, .user-grid {
     grid-template-columns: 1fr;
   }
 }
