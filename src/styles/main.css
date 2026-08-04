@@ -538,7 +538,43 @@ pre.report-box {
 }
 
 @media (max-width: 600px) {
-  .app-container { padding: 6px 10px; }
-  .header { padding: 6px 10px; }
+  .app-container { padding: 6px 8px; }
+  .header { padding: 6px 8px; }
   .logo { font-size: 13px; }
+
+  /* Mobile floating cart bar safe area */
+  .floating-cart {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 10px;
+  }
+
+  /* Prevent auto-zoom on mobile inputs */
+  .input-field {
+    font-size: 14px !important;
+  }
+
+  /* Ergonomic mobile touch targets */
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .btn-icon-only {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Compact modals on mobile screen */
+  .modal-content {
+    max-width: 95vw;
+    padding: 14px 12px;
+    border-radius: 8px;
+  }
+
+  .popup-card {
+    max-width: 92vw;
+    padding: 20px 14px;
+  }
 }

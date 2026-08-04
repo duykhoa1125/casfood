@@ -373,6 +373,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                 placeholder="Nhập tên của bạn (Ví dụ: Nguyễn Văn A)..."
                 value={userName}
                 onChange={e => setUserName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && userName.trim() && setIsEditingName(false)}
                 style={{ fontSize: '12px', padding: '4px 8px' }}
                 autoFocus
               />
@@ -505,9 +506,10 @@ export default function UserView({ session: propSession, settings: propSettings,
               <input 
                 type="text" 
                 className="input-field"
-                placeholder="Nhập ghi chú..."
+                placeholder="Nhập ghi chú rồi nhấn Enter để thêm..."
                 value={modalNotes}
                 onChange={e => setModalNotes(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddToCart()}
               />
             </div>
 
