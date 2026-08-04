@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession } from '../../services/api';
 
@@ -15,6 +15,7 @@ export default function UserView({ session: propSession, settings: propSettings,
 
   // Cart State
   const [cart, setCart] = useState([]);
+  const [showCartModal, setShowCartModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Option Customization Modal
@@ -84,7 +85,7 @@ export default function UserView({ session: propSession, settings: propSettings,
     setModalOptions(initialOptions);
   };
 
-  // Add item to cart
+  // Add item to cart (merges item if identical options & notes exist)
   const handleAddToCart = () => {
     if (!activeItem) return;
 
@@ -106,7 +107,7 @@ export default function UserView({ session: propSession, settings: propSettings,
     const itemTotal = unitPrice * modalQuantity;
 
     const cartItem = {
-      cartId: `cart_${Date.now()}_${Math.random()}`,
+      cartId: `cart_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       id: activeItem.id,
       name: activeItem.name,
       price: activeItem.price,
@@ -116,10 +117,79 @@ export default function UserView({ session: propSession, settings: propSettings,
       itemTotal
     };
 
-    setCart([...cart, cartItem]);
+    const existingIndex = cart.findIndex(c => 
+      c.id === cartItem.id && 
+      JSON.stringify(c.selectedOptions) === JSON.stringify(cartItem.selectedOptions) && 
+      (c.notes || '').trim() === (cartItem.notes || '').trim()
+    );
+
+    if (existingIndex > -1) {
+      const updatedCart = [...cart];
+      const existing = updatedCart[existingIndex];
+      const newQty = existing.quantity + modalQuantity;
+      const unit = existing.itemTotal / existing.quantity;
+      updatedCart[existingIndex] = {
+        ...existing,
+        quantity: newQty,
+        itemTotal: unit * newQty
+      };
+      setCart(updatedCart);
+    } else {
+      setCart([...cart, cartItem]);
+    }
+
     setActiveItem(null);
   };
 
+  // Increment cart item quantity
+  const handleIncrementCartItem = (cartId) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.cartId === cartId) {
+        const unitPrice = item.itemTotal / item.quantity;
+        const newQty = item.quantity + 1;
+        return {
+          ...item,
+          quantity: newQty,
+          itemTotal: unitPrice * newQty
+        };
+      }
+      return item;
+    }));
+  };
+
+  // Decrement cart item quantity (removes item if quantity becomes 0)
+  const handleDecrementCartItem = (cartId) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.cartId === cartId) {
+        if (item.quantity > 1) {
+          const unitPrice = item.itemTotal / item.quantity;
+          const newQty = item.quantity - 1;
+          return {
+            ...item,
+            quantity: newQty,
+            itemTotal: unitPrice * newQty
+          };
+        }
+        return null;
+      }
+      return item;
+    }).filter(Boolean));
+  };
+
+  // Remove single item from cart
+  const handleRemoveCartItem = (cartId) => {
+    setCart(prevCart => prevCart.filter(item => item.cartId !== cartId));
+  };
+
+  // Clear all items in cart
+  const handleClearCart = () => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ món trong giỏ hàng?')) {
+      setCart([]);
+      setShowCartModal(false);
+    }
+  };
+
+  const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalCartAmount = cart.reduce((sum, item) => sum + item.itemTotal, 0);
 
   // Submit Order
@@ -432,19 +502,174 @@ export default function UserView({ session: propSession, settings: propSettings,
       {/* Floating Bottom Cart Bar */}
       {cart.length > 0 && !isClosed && (
         <div className="floating-cart">
-          <div>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>
-              Đã chọn: <strong style={{ color: 'var(--text-main)' }}>{cart.length} món</strong>
-            </span>
-            <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
-              {totalCartAmount.toLocaleString('vi-VN')}đ
-            </span>
+          <div 
+            onClick={() => setShowCartModal(true)} 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+            title="Nhấp để xem và chỉnh sửa giỏ hàng"
+          >
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <ShoppingCart size={22} style={{ color: 'var(--text-main)' }} />
+              <span className="cart-badge-count">{totalCartCount}</span>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-muted)', fontSize: '10px', display: 'block', lineHeight: 1.1 }}>
+                Giỏ hàng ({cart.length} món) • <span style={{ color: 'var(--text-main)', textDecoration: 'underline' }}>Xem chi tiết</span>
+              </span>
+              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+                {totalCartAmount.toLocaleString('vi-VN')}đ
+              </span>
+            </div>
           </div>
 
-          <button className="btn btn-primary btn-sm" onClick={handleSubmitOrder} disabled={isSubmitting}>
-            <ShoppingCart size={14} />
-            {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn Ngay'}
-          </button>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(true)} style={{ padding: '4px 8px' }}>
+              <ChevronUp size={14} /> Chi Tiết
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={handleSubmitOrder} disabled={isSubmitting}>
+              <ShoppingCart size={14} />
+              {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn Ngay'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Cart Modal */}
+      {showCartModal && (
+        <div className="modal-overlay" onClick={() => setShowCartModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex-between" style={{ marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShoppingCart size={18} style={{ color: 'var(--text-main)' }} />
+                <h3 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '15px', fontWeight: '700' }}>
+                  Giỏ Hàng Của Bạn ({totalCartCount} món)
+                </h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {cart.length > 0 && (
+                  <button 
+                    className="btn btn-outline btn-sm text-red" 
+                    onClick={handleClearCart}
+                    style={{ fontSize: '10px', padding: '2px 6px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                    title="Xóa tất cả món trong giỏ hàng"
+                  >
+                    <Trash2 size={11} /> Xóa tất cả
+                  </button>
+                )}
+                <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(false)}>
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Items List */}
+            {cart.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '28px', marginBottom: '6px' }}>🛒</p>
+                <p style={{ fontSize: '13px', fontWeight: '600' }}>Giỏ hàng của bạn đang trống</p>
+                <p style={{ fontSize: '11px', marginTop: '2px' }}>Hãy chọn món ăn từ thực đơn bên dưới nhé!</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '2px' }}>
+                {cart.map((item) => (
+                  <div 
+                    key={item.cartId}
+                    style={{
+                      background: 'var(--input-bg)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '6px',
+                      padding: '8px 10px'
+                    }}
+                  >
+                    {/* Item Top Info */}
+                    <div className="flex-between" style={{ marginBottom: '4px' }}>
+                      <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                        {item.name}
+                      </span>
+                      <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                        {item.itemTotal.toLocaleString('vi-VN')}đ
+                      </span>
+                    </div>
+
+                    {/* Selected options & notes */}
+                    {(item.selectedOptions?.length > 0 || item.notes) && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', lineHeight: '1.3' }}>
+                        {item.selectedOptions?.map(o => `${o.title}: ${o.choice}`).join(', ')}
+                        {item.notes ? (item.selectedOptions?.length ? ` | Ghi chú: ${item.notes}` : `Ghi chú: ${item.notes}`) : ''}
+                      </div>
+                    )}
+
+                    {/* Controls: Stepper [-] Qty [+] and Delete button */}
+                    <div className="flex-between" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button 
+                          className="btn btn-outline btn-sm" 
+                          onClick={() => handleDecrementCartItem(item.cartId)}
+                          style={{ width: '24px', height: '24px', padding: 0 }}
+                          title={item.quantity === 1 ? "Xóa món này" : "Giảm số lượng"}
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '18px', textAlign: 'center', color: 'var(--text-main)' }}>
+                          {item.quantity}
+                        </span>
+                        <button 
+                          className="btn btn-outline btn-sm" 
+                          onClick={() => handleIncrementCartItem(item.cartId)}
+                          style={{ width: '24px', height: '24px', padding: 0 }}
+                          title="Tăng số lượng"
+                        >
+                          <Plus size={12} />
+                        </button>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '4px' }}>
+                          ({(item.itemTotal / item.quantity).toLocaleString('vi-VN')}đ/món)
+                        </span>
+                      </div>
+
+                      <button 
+                        className="btn btn-outline btn-sm text-red" 
+                        onClick={() => handleRemoveCartItem(item.cartId)}
+                        style={{ padding: '2px 6px', fontSize: '10px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                        title="Xóa khỏi giỏ hàng"
+                      >
+                        <Trash2 size={12} /> Xóa
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            {cart.length > 0 && (
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
+                <div className="flex-between" style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Tổng thanh toán:</span>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+                    {totalCartAmount.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(false)} style={{ padding: '6px' }}>
+                    Tiếp tục chọn
+                  </button>
+                  <button 
+                    className="btn btn-primary btn-sm" 
+                    onClick={() => {
+                      setShowCartModal(false);
+                      handleSubmitOrder();
+                    }}
+                    disabled={isSubmitting}
+                    style={{ padding: '6px' }}
+                  >
+                    <ShoppingCart size={14} />
+                    {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn Ngay'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

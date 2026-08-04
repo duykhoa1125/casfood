@@ -1,96 +1,120 @@
 import express from 'express';
-import { readDb, writeDb } from '../store/db.js';
+import Order from '../models/Order.js';
+import Session from '../models/Session.js';
+import Settings from '../models/Settings.js';
 
 const router = express.Router();
 
 // GET all orders for a session
-router.get('/session/:sessionId', (req, res) => {
-  const db = readDb();
-  const sessionOrders = db.orders.filter(o => o.sessionId === req.params.sessionId);
-  res.json({ success: true, orders: sessionOrders });
+router.get('/session/:sessionId', async (req, res) => {
+  try {
+    const sessionOrders = await Order.find({ sessionId: req.params.sessionId })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ success: true, orders: sessionOrders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi tải danh sách đơn: ' + err.message });
+  }
 });
 
 // SUBMIT new order by a colleague
-router.post('/session/:sessionId', (req, res) => {
-  const { userName, items, notes } = req.body;
-  const { sessionId } = req.params;
+router.post('/session/:sessionId', async (req, res) => {
+  try {
+    const { userName, items, notes } = req.body;
+    const { sessionId } = req.params;
 
-  if (!userName || !items || !items.length) {
-    return res.status(400).json({ success: false, message: "Vui lòng nhập tên và chọn ít nhất 1 món" });
+    if (!userName || !items || !items.length) {
+      return res.status(400).json({ success: false, message: "Vui lòng nhập tên và chọn ít nhất 1 món" });
+    }
+
+    const session = await Session.findOne({ id: sessionId }).lean();
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Phiên đặt hàng không tồn tại" });
+    }
+
+    if (session.status === 'CLOSED') {
+      return res.status(400).json({ success: false, message: "Phiên đặt hàng này đã đóng!" });
+    }
+
+    // Calculate order total
+    const totalAmount = items.reduce((sum, item) => sum + (item.itemTotal || (item.price * item.quantity)), 0);
+
+    const newOrder = {
+      id: 'ord_' + Math.random().toString(36).substring(2, 9),
+      sessionId,
+      userName: userName.trim(),
+      items,
+      totalAmount,
+      paymentStatus: "PENDING",
+      notes: notes || "",
+      createdAt: new Date()
+    };
+
+    const createdOrder = await Order.create(newOrder);
+
+    let settings = await Settings.findOne({ key: 'admin_settings' }).lean();
+    if (!settings) {
+      settings = { qrImage: "", deepseekApiKey: "" };
+    }
+
+    res.json({
+      success: true,
+      order: createdOrder,
+      adminBank: settings
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi gửi đơn đặt món: ' + err.message });
   }
-
-  const db = readDb();
-  const session = db.sessions.find(s => s.id === sessionId);
-
-  if (!session) {
-    return res.status(404).json({ success: false, message: "Phiên đặt hàng không tồn tại" });
-  }
-
-  if (session.status === 'CLOSED') {
-    return res.status(400).json({ success: false, message: "Phiên đặt hàng này đã đóng!" });
-  }
-
-  // Calculate order total
-  const totalAmount = items.reduce((sum, item) => sum + (item.itemTotal || (item.price * item.quantity)), 0);
-
-  const newOrder = {
-    id: 'ord_' + Math.random().toString(36).substring(2, 9),
-    sessionId,
-    userName: userName.trim(),
-    items,
-    totalAmount,
-    paymentStatus: "PENDING",
-    notes: notes || "",
-    createdAt: new Date().toISOString()
-  };
-
-  db.orders.unshift(newOrder);
-  writeDb(db);
-
-  res.json({
-    success: true,
-    order: newOrder,
-    adminBank: db.settings
-  });
 });
 
 // TOGGLE payment status manually by Admin
-router.patch('/:orderId/payment', (req, res) => {
-  const { paymentStatus } = req.body;
-  const db = readDb();
-  const order = db.orders.find(o => o.id === req.params.orderId);
+router.patch('/:orderId/payment', async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const order = await Order.findOne({ id: req.params.orderId });
 
-  if (!order) {
-    return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+    }
+
+    order.paymentStatus = paymentStatus || (order.paymentStatus === 'PAID' ? 'PENDING' : 'PAID');
+    await order.save();
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi cập nhật thanh toán: ' + err.message });
   }
-
-  order.paymentStatus = paymentStatus || (order.paymentStatus === 'PAID' ? 'PENDING' : 'PAID');
-  writeDb(db);
-
-  res.json({ success: true, order });
 });
 
 // DELETE an order
-router.delete('/:orderId', (req, res) => {
-  const db = readDb();
-  db.orders = db.orders.filter(o => o.id !== req.params.orderId);
-  writeDb(db);
-  res.json({ success: true, message: "Đã xóa đơn thành công" });
+router.delete('/:orderId', async (req, res) => {
+  try {
+    await Order.deleteOne({ id: req.params.orderId });
+    res.json({ success: true, message: "Đã xóa đơn thành công" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi xóa đơn: ' + err.message });
+  }
 });
 
 // UPDATE Admin Settings (Mã QR nhận tiền Admin & DeepSeek Key)
-router.post('/admin/settings', (req, res) => {
-  const { qrImage, deepseekApiKey } = req.body;
-  const db = readDb();
-  
-  db.settings = {
-    ...db.settings,
-    qrImage: qrImage !== undefined ? qrImage : db.settings.qrImage,
-    deepseekApiKey: deepseekApiKey !== undefined ? deepseekApiKey : db.settings.deepseekApiKey
-  };
+router.post('/admin/settings', async (req, res) => {
+  try {
+    const { qrImage, deepseekApiKey } = req.body;
+    let settings = await Settings.findOne({ key: 'admin_settings' });
 
-  writeDb(db);
-  res.json({ success: true, settings: db.settings });
+    if (!settings) {
+      settings = new Settings({ key: 'admin_settings' });
+    }
+
+    if (qrImage !== undefined) settings.qrImage = qrImage;
+    if (deepseekApiKey !== undefined) settings.deepseekApiKey = deepseekApiKey;
+
+    await settings.save();
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi lưu cài đặt Admin: ' + err.message });
+  }
 });
 
 export default router;

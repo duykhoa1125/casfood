@@ -8,6 +8,173 @@
   },
   "sessions": [
     {
+      "id": "lunch-w93vif",
+      "adminSlug": "4526edc87cfe8f70",
+      "adminName": "Duy Khoa",
+      "title": "Đặt Cơm Trưa Hôm Nay",
+      "restaurantName": "Cơm Tấm & Trà Sữa Văn Phòng",
+      "status": "OPEN",
+      "createdAt": "2026-08-04T13:32:44.167Z",
+      "menuData": [
+        {
+          "category": "Cơm",
+          "items": [
+            {
+              "id": "ai_item_1785850351233_0_0",
+              "name": "Cơm sườn non chiên",
+              "price": 30000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_1",
+              "name": "Cơm thịt kho trứng",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_2",
+              "name": "Cơm ba rọi kho tiêu",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_3",
+              "name": "Cơm sườn kho khóm",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_4",
+              "name": "Cơm cá basa kho tiêu",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_5",
+              "name": "Cơm gà kho sả ớt",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_0_6",
+              "name": "Cơm cá ngừ kho khóm",
+              "price": 25000,
+              "description": "",
+              "options": []
+            }
+          ]
+        },
+        {
+          "category": "Nước Ép – Sữa",
+          "items": [
+            {
+              "id": "ai_item_1785850351233_1_0",
+              "name": "Ép ổi",
+              "price": 15000,
+              "description": "ly lớn",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_1_1",
+              "name": "Ép thơm",
+              "price": 22000,
+              "description": "ly",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_1_2",
+              "name": "Trà tắt + thạch trái cây",
+              "price": 13000,
+              "description": "ly",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_1_3",
+              "name": "Ép dưa",
+              "price": 17000,
+              "description": "ly lớn",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_1_4",
+              "name": "Ép cam",
+              "price": 13000,
+              "description": "ly lớn",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_1_5",
+              "name": "Sữa đậu nành",
+              "price": 8000,
+              "description": "ly lớn",
+              "options": []
+            }
+          ]
+        },
+        {
+          "category": "Bún – Mì Nước",
+          "items": [
+            {
+              "id": "ai_item_1785850351233_2_0",
+              "name": "Bún riêu cua",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_1",
+              "name": "Bún riêu cua (đặc biệt)",
+              "price": 40000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_2",
+              "name": "Bún riêu ốc",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_3",
+              "name": "Bún riêu ốc (đặc biệt)",
+              "price": 40000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_4",
+              "name": "Bún ốc hến",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_5",
+              "name": "Mì ốc hến",
+              "price": 28000,
+              "description": "",
+              "options": []
+            },
+            {
+              "id": "ai_item_1785850351233_2_6",
+              "name": "Bún mì ốc hến",
+              "price": 28000,
+              "description": "",
+              "options": []
+            }
+          ]
+        }
+      ],
+      "attachedImages": []
+    },
+    {
       "id": "lunch-h6qi4g",
       "adminSlug": "57374193aaf4e005",
       "adminName": "sdfsad",
@@ -508,6 +675,37 @@
     }
   ],
   "orders": [
+    {
+      "id": "ord_moizq9z",
+      "sessionId": "lunch-w93vif",
+      "userName": "Khoa đặt món",
+      "items": [
+        {
+          "cartId": "cart_1785850392557_0.7761423452328189",
+          "id": "ai_item_1785850351233_1_0",
+          "name": "Ép ổi",
+          "price": 15000,
+          "quantity": 1,
+          "selectedOptions": [],
+          "notes": "ổi thêm",
+          "itemTotal": 15000
+        },
+        {
+          "cartId": "cart_1785850468461_0.9627131225889126",
+          "id": "ai_item_1785850351233_2_0",
+          "name": "Bún riêu cua",
+          "price": 28000,
+          "quantity": 1,
+          "selectedOptions": [],
+          "notes": "ít cay",
+          "itemTotal": 28000
+        }
+      ],
+      "totalAmount": 43000,
+      "paymentStatus": "PENDING",
+      "notes": "",
+      "createdAt": "2026-08-04T13:35:09.811Z"
+    },
     {
       "id": "ord_tuft0me",
       "sessionId": "lunch-h6qi4g",

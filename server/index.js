@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { connectDB } from './config/db.js';
 import sessionRoutes from './routes/sessions.js';
 import orderRoutes from './routes/orders.js';
 import aiRoutes from './routes/ai.js';
@@ -15,6 +16,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// Connect to MongoDB
+connectDB();
 
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
