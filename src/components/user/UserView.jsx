@@ -499,7 +499,12 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const rules = session?.mixRules || {};
             const mixTitle = rules.mixTitle || '🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY';
-            const maxAllowed = typeof rules.maxAllowedItems === 'number' ? rules.maxAllowedItems : null;
+            const maxAllowed = typeof rules.maxAllowedItems === 'number' 
+              ? rules.maxAllowedItems 
+              : (typeof rules.tier2Count === 'number' 
+                  ? rules.tier2Count 
+                  : (typeof rules.tier1Count === 'number' ? rules.tier1Count : null));
+
             const instructionText = rules.instructionText || (maxAllowed ? `Được chọn tối đa ${maxAllowed} món / topping:` : 'Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:');
             
             // Dynamic tier rules extracted by AI (Zero hardcoding)
@@ -557,7 +562,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                     {selectedToppingsCount === 0 
                       ? 'Chưa chọn món' 
                       : maxAllowed 
-                        ? `Đã chọn ${selectedToppingsCount}/${maxAllowed} Topping (${selectedPrice.toLocaleString('vi-VN')}đ)` 
+                        ? `Đã chọn ${selectedToppingsCount}/${maxAllowed} món (${selectedPrice.toLocaleString('vi-VN')}đ)` 
                         : count <= tier1Count
                           ? `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
                           : `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
@@ -634,8 +639,8 @@ export default function UserView({ session: propSession, settings: propSettings,
                               if (maxAllowed && selectedToppingsCount >= maxAllowed) {
                                 showPopup({
                                   type: 'warning',
-                                  title: 'Đã đạt giới hạn chọn topping! ⚠️',
-                                  message: `Suất cơm này chỉ cho phép chọn tối đa ${maxAllowed} topping!`
+                                  title: 'Đã đạt giới hạn chọn món! ⚠️',
+                                  message: `Suất cơm này chỉ cho phép chọn tối đa ${maxAllowed} món!`
                                 });
                                 return;
                               }
@@ -745,35 +750,57 @@ export default function UserView({ session: propSession, settings: propSettings,
             );
           })()}
 
-          {/* 2-Column Food Grid Layout */}
+          {/* 2-Column Food Grid Layout for Standalone / Non-Mix items */}
           <div>
-            {menuData.map((catGroup, catIdx) => (
-              <div key={catIdx} className="menu-category-section">
-                <div className="category-header-title">
-                  {catGroup.category}
-                </div>
+            {(() => {
+              const isMixMenu = Boolean(
+                session?.isMixMenu || 
+                menuData.some(cat => (cat.category || '').toLowerCase().includes('mix'))
+              );
 
-                <div className="food-grid-2col">
-                  {catGroup.items.map(item => (
-                    <div key={item.id} className="food-cell">
-                      <div className="food-cell-info">
-                        <div className="food-cell-name">{item.name}</div>
-                        <div className="food-cell-price">{item.price.toLocaleString('vi-VN')}đ</div>
+              const filteredMenu = menuData.map(catGroup => {
+                if (!isMixMenu) return catGroup;
+
+                // Filter out items that are toppings, free gifts, or 0đ mix items already rendered in Mix Box
+                const nonMixItems = (catGroup.items || []).filter(item => {
+                  const isMixItem = item.isTopping || item.isFreeGift || item.price === 0;
+                  return !isMixItem;
+                });
+
+                return {
+                  ...catGroup,
+                  items: nonMixItems
+                };
+              }).filter(catGroup => catGroup.items.length > 0);
+
+              return filteredMenu.map((catGroup, catIdx) => (
+                <div key={catIdx} className="menu-category-section">
+                  <div className="category-header-title">
+                    {catGroup.category}
+                  </div>
+
+                  <div className="food-grid-2col">
+                    {catGroup.items.map(item => (
+                      <div key={item.id} className="food-cell">
+                        <div className="food-cell-info">
+                          <div className="food-cell-name">{item.name}</div>
+                          <div className="food-cell-price">{item.price.toLocaleString('vi-VN')}đ</div>
+                        </div>
+
+                        <button 
+                          className="btn btn-primary btn-icon-only"
+                          onClick={() => handleOpenItemModal(item)}
+                          disabled={isClosed}
+                          title="Chọn món này"
+                        >
+                          <Plus size={14} />
+                        </button>
                       </div>
-
-                      <button 
-                        className="btn btn-primary btn-icon-only"
-                        onClick={() => handleOpenItemModal(item)}
-                        disabled={isClosed}
-                        title="Chọn món này"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
       </div>

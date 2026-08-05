@@ -293,23 +293,39 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                   })()}
 
                   {/* 2-Column Food Grid for Admin View Mode */}
-                  {activeMenu.map((cat, catIdx) => (
-                    <div key={catIdx} className="menu-category-section" style={{ marginBottom: '8px' }}>
-                      <div className="category-header-title" style={{ fontSize: '11px', padding: '3px 8px' }}>
-                        {cat.category} ({cat.items?.length || 0})
-                      </div>
-                      <div className="food-grid-2col" style={{ gap: '4px' }}>
-                        {cat.items?.map((item, itemIdx) => (
-                          <div key={item.id || itemIdx} className="food-cell" style={{ padding: '6px 8px' }}>
-                            <div className="food-cell-info">
-                              <div className="food-cell-name" style={{ fontSize: '11px' }}>{item.name}</div>
-                              <div className="food-cell-price" style={{ fontSize: '11px' }}>{item.price?.toLocaleString('vi-VN')}đ</div>
+                  {(() => {
+                    const isMixMenu = Boolean(
+                      session?.isMixMenu || 
+                      activeMenu.some(cat => (cat.category || '').toLowerCase().includes('mix'))
+                    );
+
+                    const filteredActiveMenu = activeMenu.map(cat => {
+                      if (!isMixMenu) return cat;
+                      const nonMixItems = (cat.items || []).filter(item => {
+                        const isMixItem = item.isTopping || item.isFreeGift || item.price === 0;
+                        return !isMixItem;
+                      });
+                      return { ...cat, items: nonMixItems };
+                    }).filter(cat => cat.items.length > 0);
+
+                    return filteredActiveMenu.map((cat, catIdx) => (
+                      <div key={catIdx} className="menu-category-section" style={{ marginBottom: '8px' }}>
+                        <div className="category-header-title" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                          {cat.category} ({cat.items?.length || 0})
+                        </div>
+                        <div className="food-grid-2col" style={{ gap: '4px' }}>
+                          {cat.items?.map((item, itemIdx) => (
+                            <div key={item.id || itemIdx} className="food-cell" style={{ padding: '6px 8px' }}>
+                              <div className="food-cell-info">
+                                <div className="food-cell-name" style={{ fontSize: '11px' }}>{item.name}</div>
+                                <div className="food-cell-price" style={{ fontSize: '11px' }}>{item.price?.toLocaleString('vi-VN')}đ</div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               )}
             </div>
