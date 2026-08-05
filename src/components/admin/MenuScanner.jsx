@@ -28,12 +28,18 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
   // Lightbox preview for image
   const [previewImage, setPreviewImage] = useState(null);
 
+  // State for editing active session mix rules
+  const [activeIsMixMenuState, setActiveIsMixMenuState] = useState(false);
+  const [activeMixRulesState, setActiveMixRulesState] = useState(null);
+
   // Sync activeMenuState when session changes
   useEffect(() => {
     if (session && session.menuData) {
       setActiveMenuState(JSON.parse(JSON.stringify(session.menuData)));
       if (session.restaurantName) setRestaurantName(session.restaurantName);
       if (session.title) setSessionTitle(session.title);
+      setActiveIsMixMenuState(Boolean(session.isMixMenu));
+      setActiveMixRulesState(session.mixRules ? JSON.parse(JSON.stringify(session.mixRules)) : null);
     }
   }, [session]);
 
@@ -190,9 +196,13 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
     if (!session?.id) return;
     try {
       setIsSavingMenu(true);
-      const res = await updateSession(session.id, { menuData: activeMenuState });
+      const res = await updateSession(session.id, { 
+        menuData: activeMenuState,
+        isMixMenu: activeIsMixMenuState,
+        mixRules: activeMixRulesState
+      });
       if (res.success) { 
-        showPopup({ type: 'success', title: 'Đã lưu thay đổi', message: 'Đã cập nhật thực đơn phiên hiện tại thành công!' }); 
+        showPopup({ type: 'success', title: 'Đã lưu thay đổi', message: 'Đã cập nhật thực đơn & cấu hình mix thành công!' }); 
         setIsEditingActiveMenu(false); 
         if (onSessionUpdated) onSessionUpdated(res.session); 
       }
@@ -334,6 +344,70 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
           {/* Edit Mode */}
           {isEditingActiveMenu && (
             <div>
+              {/* Mix Rules Config Card in Edit Mode */}
+              {activeIsMixMenuState && (
+                <div style={{ background: 'var(--badge-bg)', border: '1px solid var(--border-color)', padding: '8px 10px', borderRadius: '6px', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-main)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🍱 Cấu Hình Gói Giá Mix (Tier Pricing)
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
+                    <div>
+                      <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Tên Bảng Mix:</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        style={{ fontSize: '11px', padding: '2px 5px' }}
+                        value={activeMixRulesState?.mixTitle || ''}
+                        onChange={e => setActiveMixRulesState(prev => ({ ...prev, mixTitle: e.target.value }))}
+                        placeholder="Ví dụ: 🍱 TỰ CHỌN HỘP CƠM MIX HÔM NAY"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Dòng Hướng Dẫn:</label>
+                      <input 
+                        type="text" 
+                        className="input-field" 
+                        style={{ fontSize: '11px', padding: '2px 5px' }}
+                        value={activeMixRulesState?.instructionText || ''}
+                        onChange={e => setActiveMixRulesState(prev => ({ ...prev, instructionText: e.target.value }))}
+                        placeholder="Ví dụ: Chọn 2 món = 28.000đ / Chọn 3 món = 35.000đ"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-main)' }}>Gói Tier 1:</span>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'center' }}>
+                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 4px', width: '40px' }}
+                          value={activeMixRulesState?.tier1Count ?? 2}
+                          onChange={e => setActiveMixRulesState(prev => ({ ...prev, tier1Count: parseInt(e.target.value) || 2 }))} />
+                        <span style={{ fontSize: '10px' }}>món =</span>
+                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 4px', flex: 1 }}
+                          value={activeMixRulesState?.tier1Price ?? 28000}
+                          onChange={e => setActiveMixRulesState(prev => ({ ...prev, tier1Price: parseInt(e.target.value) || 0 }))} />
+                        <span style={{ fontSize: '10px' }}>đ</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-card)', padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-main)' }}>Gói Tier 2:</span>
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '2px', alignItems: 'center' }}>
+                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 4px', width: '40px' }}
+                          value={activeMixRulesState?.tier2Count ?? 3}
+                          onChange={e => setActiveMixRulesState(prev => ({ ...prev, tier2Count: parseInt(e.target.value) || 3 }))} />
+                        <span style={{ fontSize: '10px' }}>món =</span>
+                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 4px', flex: 1 }}
+                          value={activeMixRulesState?.tier2Price ?? 35000}
+                          onChange={e => setActiveMixRulesState(prev => ({ ...prev, tier2Price: parseInt(e.target.value) || 0 }))} />
+                        <span style={{ fontSize: '10px' }}>đ</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeMenuState.map((cat, catIdx) => (
                 <div key={catIdx} style={{ background: 'var(--input-bg)', padding: '6px', borderRadius: '4px', marginBottom: '6px', border: '1px solid var(--border-color)' }}>
                   <div className="flex-between" style={{ marginBottom: '4px' }}>
@@ -341,31 +415,46 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                       onChange={e => { const u = [...activeMenuState]; u[catIdx].category = e.target.value; setActiveMenuState(u); }} />
                     <button className="btn btn-outline btn-sm" onClick={() => handleActiveAddItem(catIdx)} style={{ padding: '1px 5px', fontSize: '10px' }}><Plus size={10} /></button>
                   </div>
-                  {cat.items?.map((item, itemIdx) => (
-                    <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px' }}>
-                        <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
-                        <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
-                        <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
-                      </div>
-
-                      {/* Options Preview */}
-                      {item.options && item.options.length > 0 && (
-                        <div style={{ marginLeft: '10px', paddingLeft: '6px', borderLeft: '2px solid var(--border-color)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          {item.options.map((optGroup, ogIdx) => (
-                            <div key={ogIdx} style={{ marginTop: '2px' }}>
-                              <strong style={{ color: 'var(--text-main)' }}>⚙️ {optGroup.title}:</strong>{' '}
-                              {optGroup.choices?.map((c, cIdx) => (
-                                <span key={cIdx} style={{ background: 'var(--bg-card)', padding: '1px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', marginRight: '3px', display: 'inline-block', marginTop: '2px' }}>
-                                  {c.name} {c.price ? `(+${c.price.toLocaleString('vi-VN')}đ)` : ''}
-                                </span>
-                              ))}
+                  {cat.items?.map((item, itemIdx) => {
+                    const isMixTopping = activeIsMixMenuState && (item.isTopping || item.price === 0) && !item.isFreeGift;
+                    return (
+                      <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 22px', gap: '4px', alignItems: 'center' }}>
+                          <input type="text" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.name} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
+                          
+                          {isMixTopping ? (
+                            <div style={{ fontSize: '10px', background: 'var(--badge-bg)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '3px 5px', textAlign: 'center', color: 'var(--text-main)', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                              🍱 Món Mix (0đ)
                             </div>
-                          ))}
+                          ) : item.isFreeGift ? (
+                            <div style={{ fontSize: '10px', background: 'var(--badge-bg)', border: '1px dashed var(--border-color)', borderRadius: '4px', padding: '3px 5px', textAlign: 'center', color: 'var(--text-main)', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                              🎁 Tặng kèm (0đ)
+                            </div>
+                          ) : (
+                            <input type="number" className="input-field" style={{ fontSize: '11px', padding: '2px 5px' }} value={item.price} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
+                          )}
+
+                          <button className="btn btn-outline btn-sm" style={{ padding: '2px' }} title="Xóa món" onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash2 size={11} /></button>
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        {/* Options Preview */}
+                        {item.options && item.options.length > 0 && (
+                          <div style={{ marginLeft: '10px', paddingLeft: '6px', borderLeft: '2px solid var(--border-color)', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {item.options.map((optGroup, ogIdx) => (
+                              <div key={ogIdx} style={{ marginTop: '2px' }}>
+                                <strong style={{ color: 'var(--text-main)' }}>⚙️ {optGroup.title}:</strong>{' '}
+                                {optGroup.choices?.map((c, cIdx) => (
+                                  <span key={cIdx} style={{ background: 'var(--bg-card)', padding: '1px 4px', borderRadius: '3px', border: '1px solid var(--border-color)', marginRight: '3px', display: 'inline-block', marginTop: '2px' }}>
+                                    {c.name} {c.price ? `(+${c.price.toLocaleString('vi-VN')}đ)` : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
               <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
