@@ -558,14 +558,48 @@ export default function UserView({ session: propSession, settings: propSettings,
                       ? 'Chưa chọn món' 
                       : maxAllowed 
                         ? `Đã chọn ${selectedToppingsCount}/${maxAllowed} Topping (${selectedPrice.toLocaleString('vi-VN')}đ)` 
-                        : `Gói ${count} món (${selectedPrice.toLocaleString('vi-VN')}đ)`
+                        : count <= tier1Count
+                          ? `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
+                          : `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
                     }
                   </span>
                 </div>
 
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: rules.tier1Price ? '4px' : '8px' }}>
                   {instructionText}
                 </p>
+
+                {/* Tier Price Chips — only shown when tier pricing is active */}
+                {rules.tier1Price && !rules.maxAllowedItems && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
+                    <span style={{
+                      background: count > 0 && count <= tier1Count ? 'var(--text-main)' : 'var(--input-bg)',
+                      color: count > 0 && count <= tier1Count ? 'var(--bg-card)' : 'var(--text-main)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: count > 0 && count <= tier1Count ? '700' : '500',
+                      transition: 'all 0.2s'
+                    }}>
+                      {tier1Count} món = {tier1Price.toLocaleString('vi-VN')}đ
+                    </span>
+                    {rules.tier2Price && (
+                      <span style={{
+                        background: count > tier1Count ? 'var(--text-main)' : 'var(--input-bg)',
+                        color: count > tier1Count ? 'var(--bg-card)' : 'var(--text-main)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '4px',
+                        padding: '2px 8px',
+                        fontSize: '11px',
+                        fontWeight: count > tier1Count ? '700' : '500',
+                        transition: 'all 0.2s'
+                      }}>
+                        {tier2Count} món = {tier2Price.toLocaleString('vi-VN')}đ
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Section 1: Checkbox List for Toppings (Counted) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: '6px', marginBottom: '8px' }}>
