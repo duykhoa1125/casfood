@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, QrCode, Maximize2, ChevronUp, Trash2, Download, Users, ShoppingBag, RefreshCw, Search, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, QrCode, Maximize2, ChevronUp, Trash2, Download, Users, ShoppingBag, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession, fetchOrders } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
@@ -24,10 +24,6 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Saved User Name in LocalStorage
   const [userName, setUserName] = useState(() => localStorage.getItem('lunch_user_name') || '');
   const [isEditingName, setIsEditingName] = useState(!localStorage.getItem('lunch_user_name'));
-
-  // Search & Category Filter State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Popup Alert Dialog State
   const [popup, setPopup] = useState({ isOpen: false, type: 'warning', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
@@ -664,56 +660,6 @@ export default function UserView({ session: propSession, settings: propSettings,
             );
           })()}
 
-          {/* Search & Category Filter Section */}
-          <div style={{ margin: '14px 0 10px' }}>
-            {/* Search Box */}
-            <div style={{ position: 'relative', marginBottom: '10px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text"
-                className="input-field"
-                placeholder="Tìm món ăn..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: '32px' }}
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            {/* Category Filter Chips */}
-            {(() => {
-              const categories = ['ALL', ...menuData.map(c => c.category)];
-              if (categories.length <= 2 && searchQuery === '') return null;
-
-              return (
-                <div className="category-scroll-bar">
-                  {categories.map((cat, idx) => {
-                    const isActive = selectedCategory === cat;
-                    const emoji = cat === 'ALL' ? '🍽️' : getCategoryEmoji(cat);
-                    const label = cat === 'ALL' ? 'Tất cả' : cat;
-
-                    return (
-                      <button
-                        key={idx}
-                        className={`category-chip ${isActive ? 'active' : ''}`}
-                        onClick={() => setSelectedCategory(cat)}
-                      >
-                        {emoji} {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </div>
-
           {/* 2-Column Food Grid Layout */}
           <div>
             {(() => {
@@ -723,19 +669,10 @@ export default function UserView({ session: propSession, settings: propSettings,
               );
 
               const filteredMenu = menuData.map(catGroup => {
-                if (selectedCategory !== 'ALL' && catGroup.category !== selectedCategory) {
-                  return null;
-                }
-
                 let items = catGroup.items || [];
 
                 if (isMixMenu) {
                   items = items.filter(item => !(item.isTopping || item.isFreeGift || item.price === 0));
-                }
-
-                if (searchQuery.trim() !== '') {
-                  const q = searchQuery.toLowerCase().trim();
-                  items = items.filter(item => item.name.toLowerCase().includes(q));
                 }
 
                 if (items.length === 0) return null;
@@ -746,21 +683,11 @@ export default function UserView({ session: propSession, settings: propSettings,
                 };
               }).filter(Boolean);
 
-              if (filteredMenu.length === 0) {
-                return (
-                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)' }}>
-                    <p style={{ fontSize: '24px', marginBottom: '4px' }}>🔍</p>
-                    <p style={{ fontSize: '13px', fontWeight: '600' }}>Không tìm thấy món ăn phù hợp</p>
-                    <p style={{ fontSize: '11px', marginTop: '2px' }}>Thử tìm kiếm với từ khóa khác nhé.</p>
-                  </div>
-                );
-              }
-
               return filteredMenu.map((catGroup, catIdx) => (
                 <div key={catIdx} className="menu-category-section">
                   <div className="category-header-title">
                     <span>{getCategoryEmoji(catGroup.category)} {catGroup.category}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
                       {catGroup.items.length} món
                     </span>
                   </div>
