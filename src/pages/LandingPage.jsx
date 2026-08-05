@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Utensils, ShieldCheck, Users, ChevronRight, LogIn, ArrowLeft } from 'lucide-react';
+import { Utensils, ShieldCheck, Users, ChevronRight, LogIn, ArrowLeft, Sparkles } from 'lucide-react';
 
 function generateAdminSlug() {
   const arr = new Uint8Array(8);
@@ -39,7 +39,6 @@ export default function LandingPage() {
   const handleJoinOrder = () => {
     if (!joinCode.trim()) return;
 
-    // Smartly extract session ID if user pasted a full URL (e.g. http://domain.com/order/lunch-12345)
     let code = joinCode.trim();
     if (code.includes('/order/')) {
       code = code.split('/order/')[1].split('?')[0].split('/')[0];
@@ -57,35 +56,41 @@ export default function LandingPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '24px 16px'
     }}>
-      <div style={{ width: '100%', maxWidth: '380px' }}>
-        {/* Logo */}
+      <div style={{ width: '100%', maxWidth: '400px', animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        {/* Header Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <Utensils size={28} style={{ color: 'var(--text-main)' }} />
-            <span style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>CasFood</span>
-            <span style={{
-              background: 'var(--badge-bg)',
-              color: 'var(--text-main)',
-              fontSize: '10px',
-              fontWeight: '700',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              border: '1px solid var(--border-color)'
-            }}>LUNCH</span>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--btn-primary-bg)',
+              color: 'var(--btn-primary-text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <Utensils size={22} />
+            </div>
+            <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>CasFood</span>
+            <span className="logo-badge">LUNCH AI</span>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Hệ thống gom đặt cơm trưa văn phòng</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '500' }}>
+            Hệ thống gom đơn đặt cơm trưa văn phòng thông minh
+          </p>
         </div>
 
         {/* Role Selection */}
         {step === 'role' && (
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <h2 style={{ color: 'var(--text-main)', fontSize: '15px', fontWeight: '700', marginBottom: '6px', textAlign: 'center' }}>
+          <div className="glass-card" style={{ padding: '24px 20px' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: '700', marginBottom: '4px', textAlign: 'center' }}>
               Bạn là ai hôm nay?
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', marginBottom: '20px' }}>
-              Chọn vai trò để bắt đầu
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center', marginBottom: '24px' }}>
+              Chọn vai trò để tiếp tục sử dụng ứng dụng
             </p>
 
             {/* Admin Role */}
@@ -96,44 +101,54 @@ export default function LandingPage() {
                 background: 'var(--btn-primary-bg)',
                 color: 'var(--btn-primary-text)',
                 border: '1px solid var(--btn-primary-bg)',
-                borderRadius: '6px',
-                padding: '14px 16px',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px 18px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '14px',
                 textAlign: 'left',
-                marginBottom: '10px',
-                transition: 'opacity 0.15s ease',
-                boxSizing: 'border-box'
+                marginBottom: '12px',
+                transition: 'all var(--transition-fast)',
+                boxShadow: 'var(--shadow-sm)'
               }}
-              onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
+              onMouseOver={e => e.currentTarget.style.opacity = '0.92'}
               onMouseOut={e => e.currentTarget.style.opacity = '1'}
             >
-              <ShieldCheck size={22} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '13px' }}>Tôi là người gom đơn hôm nay</div>
-                <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '2px' }}>Tạo phòng mới, dán menu, chia link</div>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(0,0,0,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <ShieldCheck size={20} />
               </div>
-              <ChevronRight size={16} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: '700', fontSize: '14px' }}>Tôi là người gom đơn</div>
+                <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '2px' }}>Tạo phòng mới, dán menu AI, chia sẻ link</div>
+              </div>
+              <ChevronRight size={18} />
             </button>
 
-            {/* Colleague Role - Interactive */}
+            {/* Colleague Role */}
             <button
               onClick={() => setStep('join')}
               style={{
                 width: '100%',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
-                borderRadius: '6px',
-                padding: '14px 16px',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px 18px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '14px',
                 textAlign: 'left',
-                boxSizing: 'border-box',
-                transition: 'background-color 0.15s ease, border-color 0.15s ease'
+                transition: 'all var(--transition-fast)'
               }}
               onMouseOver={e => {
                 e.currentTarget.style.background = 'var(--bg-card-hover)';
@@ -144,41 +159,53 @@ export default function LandingPage() {
                 e.currentTarget.style.borderColor = 'var(--border-color)';
               }}
             >
-              <Users size={22} style={{ color: 'var(--text-main)', flexShrink: 0 }} />
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--bg-dark)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Users size={20} style={{ color: 'var(--text-main)' }} />
+              </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>Tôi là người đặt món</div>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-main)' }}>Tôi là người đặt món</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Nhập mã phòng hoặc dán link gom đơn để đặt
+                  Nhập mã phòng hoặc dán link gom đơn
                 </div>
               </div>
-              <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+              <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
             </button>
           </div>
         )}
 
-        {/* Admin Name Input */}
+        {/* Admin Name Input Step */}
         {step === 'name' && (
-          <div className="glass-card" style={{ padding: '20px' }}>
+          <div className="glass-card" style={{ padding: '24px 20px', animation: 'slideUpFade 0.25s ease' }}>
             <button
               onClick={() => setStep('role')}
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '11px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
             >
-              <ArrowLeft size={13} /> Quay lại
+              <ArrowLeft size={14} /> Quay lại
             </button>
 
-            <h2 style={{ color: 'var(--text-main)', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
-              Nhập tên của bạn
+            <h2 style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
+              Nhập tên người gom đơn
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '16px' }}>
-              Tên này sẽ hiển thị với đồng nghiệp khi họ thấy ai là người gom đơn.
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '20px' }}>
+              Tên này giúp đồng nghiệp dễ dàng nhận biết ai đang chủ trì phiên gom trưa nay.
             </p>
 
             <div className="form-group">
-              <label className="form-label">Tên người gom đơn</label>
+              <label className="form-label">Tên của bạn</label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Ví dụ: Nguyễn Minh Khoa"
+                placeholder="Ví dụ: Minh Khoa"
                 value={adminName}
                 onChange={e => setAdminName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleConfirmAdmin()}
@@ -187,43 +214,43 @@ export default function LandingPage() {
             </div>
 
             <button
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '6px', padding: '8px' }}
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', marginTop: '10px' }}
               onClick={handleConfirmAdmin}
               disabled={!adminName.trim()}
             >
-              <ShieldCheck size={14} /> Tạo Phòng Gom Đơn Mới
+              <ShieldCheck size={16} /> Tạo Phòng Gom Đơn Mới
             </button>
 
-            <p style={{ color: 'var(--text-muted)', fontSize: '10px', textAlign: 'center', marginTop: '12px' }}>
-              🔒 Trang quản lý của bạn sẽ có địa chỉ ngẫu nhiên, chỉ bạn biết.
+            <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <Sparkles size={13} style={{ color: 'var(--accent-orange)' }} /> Link quản lý riêng tư sẽ tự động được cấp cho bạn
             </p>
           </div>
         )}
 
-        {/* User Join Order Input */}
+        {/* User Join Order Step */}
         {step === 'join' && (
-          <div className="glass-card" style={{ padding: '20px' }}>
+          <div className="glass-card" style={{ padding: '24px 20px', animation: 'slideUpFade 0.25s ease' }}>
             <button
               onClick={() => setStep('role')}
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '11px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
             >
-              <ArrowLeft size={13} /> Quay lại
+              <ArrowLeft size={14} /> Quay lại
             </button>
 
-            <h2 style={{ color: 'var(--text-main)', fontSize: '15px', fontWeight: '700', marginBottom: '4px' }}>
+            <h2 style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
               Vào phòng đặt món
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '16px' }}>
-              Nhập <strong>Mã phòng</strong> (Ví dụ: <code>demo-lunch</code>) hoặc dán toàn bộ đường link do người gom đơn chia sẻ.
+            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '20px' }}>
+              Nhập mã phiên hoặc dán toàn bộ đường link do người gom đơn chia sẻ.
             </p>
 
             <div className="form-group">
-              <label className="form-label">Mã phòng / Đường link gom đơn</label>
+              <label className="form-label">Mã phiên / Link gom đơn</label>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Nhập mã phòng hoặc dán link vào đây..."
+                placeholder="Dán link hoặc mã phiên..."
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleJoinOrder()}
@@ -232,21 +259,16 @@ export default function LandingPage() {
             </div>
 
             <button
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '6px', padding: '8px' }}
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', marginTop: '10px' }}
               onClick={handleJoinOrder}
               disabled={!joinCode.trim()}
             >
-              <LogIn size={14} /> Vào Phòng Đặt Món
+              <LogIn size={16} /> Vào Phòng Đặt Món
             </button>
-
-            <p style={{ color: 'var(--text-muted)', fontSize: '10px', textAlign: 'center', marginTop: '12px' }}>
-              💡 Mẹo: Bạn có thể nhấp trực tiếp vào đường link mà đồng nghiệp gửi trong Zalo/Teams để vào nhanh hơn.
-            </p>
           </div>
         )}
       </div>
     </div>
   );
 }
-

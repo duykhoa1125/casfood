@@ -38,7 +38,7 @@ export default function ReportExporter({ session, orders }) {
 
   const totalItemsCount = Object.values(itemMap).reduce((sum, i) => sum + i.quantity, 0);
 
-  // Generate Vendor Text (Clean & Simple Layout)
+  // Generate Vendor Text
   let vendorText = `BÁO CÁO ĐẶT MÓN - ${session.restaurantName || 'Quán Cơm'}\n`;
   vendorText += `Phiên: ${session.title}\n`;
   vendorText += `----------------------------------\n`;
@@ -69,18 +69,18 @@ export default function ReportExporter({ session, orders }) {
   };
 
   return (
-    <div className="glass-card" style={{ marginTop: '8px' }}>
-      <div style={{ background: 'var(--code-bg)', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-        <div className="flex-between" style={{ marginBottom: '6px' }}>
-          <h4 style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-            <Store size={14} /> Gộp Món Gửi Quán (Bản Copy)
+    <div className="glass-card" style={{ marginTop: '12px' }}>
+      <div style={{ background: 'var(--code-bg)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+        <div className="flex-between" style={{ marginBottom: '8px' }}>
+          <h4 style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
+            <Store size={15} style={{ color: 'var(--accent-orange)' }} /> Gộp Món Gửi Quán (Bản Copy 1-Click)
           </h4>
-          <button className="btn btn-primary btn-sm" onClick={copyVendorReport} style={{ padding: '2px 8px' }}>
-            {copiedVendor ? <Check size={12} /> : <Copy size={12} />}
-            {copiedVendor ? 'Đã copy!' : 'Copy Gửi Quán'}
+          <button className="btn btn-primary btn-sm" onClick={copyVendorReport}>
+            {copiedVendor ? <Check size={13} /> : <Copy size={13} />}
+            {copiedVendor ? 'Đã sao chép!' : 'Copy Gửi Quán'}
           </button>
         </div>
-        <pre className="report-box" style={{ height: '150px' }}>
+        <pre className="report-box" style={{ minHeight: '140px' }}>
           {vendorText}
         </pre>
       </div>

@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, Copy, Image, QrCode, Maximize2, ChevronDown, ChevronUp, Trash2, Download, Users, ShoppingBag, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, QrCode, Maximize2, ChevronUp, Trash2, Download, Users, ShoppingBag, RefreshCw, Search, Image as ImageIcon } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession, fetchOrders } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
+
+function getCategoryEmoji(catName = '') {
+  const name = catName.toLowerCase();
+  if (name.includes('cơm')) return '🍚';
+  if (name.includes('bún') || name.includes('phở') || name.includes('mì') || name.includes('hủ tiếu')) return '🍜';
+  if (name.includes('uống') || name.includes('trà') || name.includes('nước') || name.includes('cà phê') || name.includes('juices')) return '🧋';
+  if (name.includes('bánh') || name.includes('tráng miệng') || name.includes('chè')) return '🍰';
+  if (name.includes('lẩu') || name.includes('nướng')) return '🍲';
+  if (name.includes('vặt') || name.includes('ăn kèm')) return '🍿';
+  return '🍱';
+}
 
 export default function UserView({ session: propSession, settings: propSettings, onOrderPlaced }) {
   const { sessionId: routeSessionId } = useParams();
@@ -13,6 +24,10 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Saved User Name in LocalStorage
   const [userName, setUserName] = useState(() => localStorage.getItem('lunch_user_name') || '');
   const [isEditingName, setIsEditingName] = useState(!localStorage.getItem('lunch_user_name'));
+
+  // Search & Category Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Popup Alert Dialog State
   const [popup, setPopup] = useState({ isOpen: false, type: 'warning', title: '', message: '', confirmText: '', cancelText: '', onConfirm: null });
@@ -25,7 +40,6 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Cart State
   const [cart, setCart] = useState([]);
   const [showCartModal, setShowCartModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   // Option Customization Modal
   const [activeItem, setActiveItem] = useState(null);
@@ -36,7 +50,6 @@ export default function UserView({ session: propSession, settings: propSettings,
   // Payment QR Success Popup Modal
   const [placedOrder, setPlacedOrder] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [copiedNote, setCopiedNote] = useState(false);
 
   // Lightbox Modal for Attached Images
   const [previewImage, setPreviewImage] = useState(null);
@@ -44,7 +57,6 @@ export default function UserView({ session: propSession, settings: propSettings,
 
   // Interactive Mix Box State
   const [selectedMixDishes, setSelectedMixDishes] = useState([]);
-  const [mixExtraRice, setMixExtraRice] = useState(false);
 
   // Live Session Orders State
   const [sessionOrders, setSessionOrders] = useState([]);
@@ -147,7 +159,7 @@ export default function UserView({ session: propSession, settings: propSettings,
     setModalOptions(initialOptions);
   };
 
-  // Add item to cart (merges item if identical options & notes exist)
+  // Add item to cart
   const handleAddToCart = () => {
     if (!activeItem) return;
 
@@ -219,7 +231,7 @@ export default function UserView({ session: propSession, settings: propSettings,
     }));
   };
 
-  // Decrement cart item quantity (removes item if quantity becomes 0)
+  // Decrement cart item quantity
   const handleDecrementCartItem = (cartId) => {
     setCart(prevCart => prevCart.map(item => {
       if (item.cartId === cartId) {
@@ -258,7 +270,7 @@ export default function UserView({ session: propSession, settings: propSettings,
     });
   };
 
-  // Copy Colleague Order 1-Click ("Đặt Giống Bạn Này")
+  // Copy Colleague Order 1-Click
   const handleCopyColleagueOrder = (colleagueOrder) => {
     if (!colleagueOrder || !colleagueOrder.items || colleagueOrder.items.length === 0) return;
 
@@ -352,20 +364,18 @@ export default function UserView({ session: propSession, settings: propSettings,
     }
   };
 
-  const transferNote = placedOrder ? `LUNCH ${placedOrder.userName}`.toUpperCase() : '';
-
   return (
     <div className="user-grid">
       {/* Left Column: Menu & Cart Selection */}
       <div>
         <div className="glass-card">
-          {/* Session Header Strip */}
-          <div className="flex-between" style={{ marginBottom: '6px' }}>
+          {/* Session Header */}
+          <div className="flex-between" style={{ marginBottom: '8px' }}>
             <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-main)', fontSize: '15px', fontWeight: '700' }}>
+              <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-main)', fontSize: '17px', fontWeight: '800' }}>
                 {session.title}
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '1px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '2px' }}>
                 📍 {session.restaurantName}
               </p>
               {session.adminName && (
@@ -375,15 +385,14 @@ export default function UserView({ session: propSession, settings: propSettings,
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {qrImage && (
                 <button 
                   className="btn btn-primary btn-sm"
                   onClick={() => setShowAdminQrSection(!showAdminQrSection)}
-                  style={{ padding: '2px 6px', fontSize: '10px' }}
-                  title="Xem mã QR Ngân Hàng nhận tiền của Admin"
+                  title="Xem mã QR Chuyển Tiền của Admin"
                 >
-                  <QrCode size={12} /> {showAdminQrSection ? 'Ẩn QR Admin' : '💳 QR Chuyển Tiền Admin'}
+                  <QrCode size={13} /> {showAdminQrSection ? 'Ẩn QR' : '💳 QR Admin'}
                 </button>
               )}
 
@@ -391,50 +400,49 @@ export default function UserView({ session: propSession, settings: propSettings,
                 <button 
                   className="btn btn-outline btn-sm"
                   onClick={() => setPreviewImage(attachedImages[0])}
-                  style={{ padding: '2px 6px', fontSize: '10px' }}
                 >
-                  <Image size={12} /> Ảnh Menu ({attachedImages.length})
+                  <ImageIcon size={13} /> Ảnh Menu ({attachedImages.length})
                 </button>
               )}
             </div>
           </div>
 
-          {/* Prominent Warning Banner when Session is Closed */}
+          {/* Session Closed Banner */}
           {isClosed && (
-            <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', margin: '8px 0', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-              <AlertTriangle size={16} /> Phiên gom đơn đã đóng. Người gom đơn đã khóa sổ nhận đơn!
+            <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', padding: '10px 14px', borderRadius: 'var(--radius-sm)', fontSize: '13px', fontWeight: '700', margin: '10px 0', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <AlertTriangle size={18} /> Phiên gom đơn đã đóng. Người gom đơn đã khóa sổ nhận đơn!
             </div>
           )}
 
-          {/* DEDICATED SEPARATE SECTION: Admin Payment QR Code */}
+          {/* Admin QR Code View */}
           {qrImage && showAdminQrSection && (
-            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px', margin: '6px 0 8px', textAlign: 'center' }}>
-              <div className="flex-between" style={{ marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <QrCode size={14} className="text-emerald" /> Mã QR Ngân Hàng Nhận Tiền Của Admin
+            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px', margin: '10px 0', textAlign: 'center' }}>
+              <div className="flex-between" style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <QrCode size={15} style={{ color: 'var(--accent-green)' }} /> Mã QR Ngân Hàng Nhận Tiền
                 </span>
-                <button className="btn btn-outline btn-sm" onClick={() => setShowAdminQrSection(false)} style={{ padding: '1px 5px', fontSize: '10px' }}>
-                  <X size={12} /> Ẩn QR
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowAdminQrSection(false)}>
+                  <X size={13} />
                 </button>
               </div>
 
-              <div className="qr-container" style={{ margin: '4px 0' }}>
-                <img src={qrImage} alt="Mã QR Chuyển Khoản Admin" className="qr-img" style={{ width: '150px', height: '150px', objectFit: 'contain' }} />
+              <div className="qr-container" style={{ margin: '6px 0' }}>
+                <img src={qrImage} alt="Mã QR Chuyển Khoản Admin" className="qr-img" />
               </div>
-              <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Quét mã QR bằng App Ngân Hàng bất kỳ để chuyển khoản trả tiền cơm trưa cho Admin.
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                Quét mã QR bằng ứng dụng ngân hàng để chuyển tiền cơm cho người gom đơn.
               </p>
             </div>
           )}
 
-          {/* SEPARATE SECTION: Menu Photos Gallery Only */}
+          {/* Attached Images */}
           {attachedImages.length > 0 && (
-            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px', margin: '6px 0 8px' }}>
-              <div className="flex-between" style={{ marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Image size={13} /> Ảnh Menu & Quán Ăn ({attachedImages.length}):
+            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '10px', margin: '10px 0' }}>
+              <div className="flex-between" style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ImageIcon size={14} /> Ảnh Menu & Quán Ăn ({attachedImages.length}):
                 </span>
-                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Chạm ảnh để xem phóng to</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Chạm để phóng to</span>
               </div>
 
               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -446,11 +454,11 @@ export default function UserView({ session: propSession, settings: propSettings,
                   >
                     <img 
                       src={img} 
-                      alt={`Attached Menu ${idx + 1}`} 
-                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                      alt={`Menu ${idx + 1}`} 
+                      style={{ width: '84px', height: '84px', objectFit: 'cover', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-color)' }}
                     />
                     <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.7)', color: '#ffffff', padding: '2px 4px', borderRadius: '3px', fontSize: '9px', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <Maximize2 size={10} /> Xem
+                      <Maximize2 size={10} />
                     </div>
                   </div>
                 ))}
@@ -458,18 +466,17 @@ export default function UserView({ session: propSession, settings: propSettings,
             </div>
           )}
 
-          {/* User Identity Input Bar */}
-          <div style={{ margin: '6px 0 8px', borderTop: '1px solid var(--border-color)', paddingTop: '6px' }}>
+          {/* User Name Bar */}
+          <div style={{ margin: '10px 0', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
             {isEditingName ? (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <input 
                   type="text"
                   className="input-field"
-                  placeholder="Nhập tên của bạn (Ví dụ: Nguyễn Văn A)..."
+                  placeholder="Nhập tên của bạn (Ví dụ: Minh Khoa)..."
                   value={userName}
                   onChange={e => setUserName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && userName.trim() && setIsEditingName(false)}
-                  style={{ fontSize: '12px', padding: '4px 8px' }}
                   autoFocus
                 />
                 <button className="btn btn-primary btn-sm" onClick={() => setIsEditingName(false)} disabled={!userName.trim()}>
@@ -478,17 +485,17 @@ export default function UserView({ session: propSession, settings: propSettings,
               </div>
             ) : (
               <div className="flex-between">
-                <span style={{ color: 'var(--text-main)', fontSize: '12px' }}>
+                <span style={{ color: 'var(--text-main)', fontSize: '13px' }}>
                   👋 Bạn: <strong style={{ fontWeight: '700' }}>{userName}</strong>
                 </span>
-                <button className="btn btn-outline btn-sm" onClick={() => setIsEditingName(true)} style={{ padding: '2px 6px', fontSize: '10px' }}>
-                  <Edit2 size={11} /> Sửa tên
+                <button className="btn btn-outline btn-sm" onClick={() => setIsEditingName(true)}>
+                  <Edit2 size={12} /> Đổi tên
                 </button>
               </div>
             )}
           </div>
 
-          {/* Dynamic Mix Menu Check */}
+          {/* Interactive Mix Menu Box */}
           {(() => {
             const isMixMenu = Boolean(
               session?.isMixMenu || 
@@ -507,7 +514,6 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const instructionText = rules.instructionText || (maxAllowed ? `Được chọn tối đa ${maxAllowed} món / topping:` : 'Đánh dấu chọn các món ăn bạn muốn mix vào hộp cơm hôm nay:');
             
-            // Dynamic tier rules extracted by AI (Zero hardcoding)
             const tier1Count = typeof rules.tier1Count === 'number' ? rules.tier1Count : 2;
             const tier1Price = typeof rules.tier1Price === 'number' ? rules.tier1Price : (rules.basePrice || 28000);
             
@@ -518,7 +524,6 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const allItems = menuData.flatMap(cat => cat.items || []);
             
-            // Free gifts (0đ) that can be checked freely without affecting topping limit or tier price
             const freeGiftItems = allItems.filter(it => 
               it.isFreeGift || 
               it.name.toLowerCase().includes('(free)') ||
@@ -527,16 +532,13 @@ export default function UserView({ session: propSession, settings: propSettings,
               it.name.toLowerCase().includes('tặng')
             );
 
-            // Toppings/main dishes that count towards maxAllowedItems & tier pricing
             const toppingItems = allItems.filter(it => 
               (it.isTopping || (it.price === 0 && !freeGiftItems.some(fg => fg.name === it.name))) &&
               !freeGiftItems.some(fg => fg.name === it.name)
             );
 
-            // Fallback: If AI didn't tag isTopping/isFreeGift, all 0đ items are toppings
             const mixSelectionItems = toppingItems.length > 0 ? toppingItems : allItems.filter(it => it.price === 0);
 
-            // Count only selected toppings towards maxAllowed & tier pricing (free gifts excluded)
             const selectedToppingsCount = selectedMixDishes.filter(dishName => 
               mixSelectionItems.some(it => it.name === dishName)
             ).length;
@@ -556,61 +558,26 @@ export default function UserView({ session: propSession, settings: propSettings,
             }
 
             return (
-              <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px', margin: '6px 0 10px' }}>
-                <div className="flex-between" style={{ marginBottom: '6px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '4px' }}>
-                  <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px 14px', margin: '10px 0 14px' }}>
+                <div className="flex-between" style={{ marginBottom: '8px', borderBottom: '1px dashed var(--border-color)', paddingBottom: '6px' }}>
+                  <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
                     {mixTitle}
                   </span>
-                  <span className="status-badge status-open" style={{ fontSize: '10px' }}>
+                  <span className="status-badge status-open">
                     {selectedToppingsCount === 0 
                       ? 'Chưa chọn món' 
                       : maxAllowed 
                         ? `Đã chọn ${selectedToppingsCount}/${maxAllowed} món (${selectedPrice.toLocaleString('vi-VN')}đ)` 
-                        : count <= tier1Count
-                          ? `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
-                          : `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
+                        : `Mix ${count} món = ${selectedPrice.toLocaleString('vi-VN')}đ`
                     }
                   </span>
                 </div>
 
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: rules.tier1Price ? '4px' : '8px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>
                   {instructionText}
                 </p>
 
-                {/* Tier Price Chips — only shown when tier pricing is active */}
-                {rules.tier1Price && !rules.maxAllowedItems && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
-                    <span style={{
-                      background: count > 0 && count <= tier1Count ? 'var(--text-main)' : 'var(--input-bg)',
-                      color: count > 0 && count <= tier1Count ? 'var(--bg-card)' : 'var(--text-main)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '4px',
-                      padding: '2px 8px',
-                      fontSize: '11px',
-                      fontWeight: count > 0 && count <= tier1Count ? '700' : '500',
-                      transition: 'all 0.2s'
-                    }}>
-                      {tier1Count} món = {tier1Price.toLocaleString('vi-VN')}đ
-                    </span>
-                    {rules.tier2Price && (
-                      <span style={{
-                        background: count > tier1Count ? 'var(--text-main)' : 'var(--input-bg)',
-                        color: count > tier1Count ? 'var(--bg-card)' : 'var(--text-main)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: '4px',
-                        padding: '2px 8px',
-                        fontSize: '11px',
-                        fontWeight: count > tier1Count ? '700' : '500',
-                        transition: 'all 0.2s'
-                      }}>
-                        {tier2Count} món = {tier2Price.toLocaleString('vi-VN')}đ
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Section 1: Checkbox List for Toppings (Counted) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))', gap: '6px', marginBottom: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', marginBottom: '10px' }}>
                   {mixSelectionItems.map((item, idx) => {
                     const isChecked = selectedMixDishes.includes(item.name);
                     return (
@@ -619,19 +586,16 @@ export default function UserView({ session: propSession, settings: propSettings,
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          background: isChecked ? 'var(--badge-bg)' : 'var(--bg-card)',
-                          border: isChecked ? '1px solid var(--text-main)' : '1px solid var(--border-color)',
-                          padding: '5px 8px',
-                          borderRadius: '4px',
+                          gap: '8px',
+                          background: isChecked ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+                          border: isChecked ? '1px solid var(--accent-green)' : '1px solid var(--border-color)',
+                          padding: '6px 10px',
+                          borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer',
-                          fontSize: '11px',
+                          fontSize: '12px',
                           color: 'var(--text-main)',
                           fontWeight: isChecked ? '700' : '400',
-                          transition: 'all 0.15s ease',
-                          minWidth: 0,
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word'
+                          transition: 'all var(--transition-fast)'
                         }}
                       >
                         <input 
@@ -652,67 +616,20 @@ export default function UserView({ session: propSession, settings: propSettings,
                               setSelectedMixDishes(prev => prev.filter(n => n !== item.name));
                             }
                           }}
-                          style={{ accentColor: 'var(--text-main)', flexShrink: 0 }}
+                          style={{ accentColor: 'var(--accent-green)', flexShrink: 0 }}
                         />
-                        <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.3' }}>{item.name}</span>
+                        <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-word', lineHeight: '1.3' }}>{item.name}</span>
                       </label>
                     );
                   })}
                 </div>
 
-                {/* Section 2: Free Gifts (Uncounted Add-ons) */}
-                {freeGiftItems.length > 0 && (
-                  <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                      🎁 TẶNG KÈM MIỄN PHÍ (Không tính vào giới hạn topping):
-                    </span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {freeGiftItems.map((item, idx) => {
-                        const isChecked = selectedMixDishes.includes(item.name);
-                        return (
-                          <label 
-                            key={idx}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: isChecked ? 'var(--badge-bg)' : 'var(--bg-card)',
-                              border: isChecked ? '1px solid var(--text-main)' : '1px dashed var(--border-color)',
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '11px',
-                              color: 'var(--text-main)',
-                              fontWeight: isChecked ? '700' : '400'
-                            }}
-                          >
-                            <input 
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={e => {
-                                if (e.target.checked) {
-                                  setSelectedMixDishes(prev => [...prev, item.name]);
-                                } else {
-                                  setSelectedMixDishes(prev => prev.filter(n => n !== item.name));
-                                }
-                              }}
-                              style={{ accentColor: 'var(--text-main)' }}
-                            />
-                            <span>{item.name}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Summary & Add to Cart Button */}
-                <div className="flex-between" style={{ background: 'var(--bg-card)', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                <div className="flex-between" style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Đã chọn: <strong style={{ color: 'var(--text-main)' }}>{selectedMixDishes.length > 0 ? selectedMixDishes.join(' + ') : 'Chưa chọn món'}</strong>
+                      Đã chọn: <strong style={{ color: 'var(--text-main)' }}>{selectedMixDishes.length > 0 ? selectedMixDishes.join(' + ') : 'Chưa chọn'}</strong>
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-green)', marginTop: '2px' }}>
                       Thành tiền: {selectedPrice.toLocaleString('vi-VN')}đ
                     </div>
                   </div>
@@ -738,22 +655,66 @@ export default function UserView({ session: propSession, settings: propSettings,
                       confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
                       setSelectedMixDishes([]);
                       setShowCartModal(true);
-                      showPopup({
-                        type: 'success',
-                        title: 'Đã thêm hộp cơm mix! 🎉',
-                        message: `Đã thêm "${boxName}" (${selectedPrice.toLocaleString('vi-VN')}đ) vào giỏ hàng!`
-                      });
                     }}
-                    style={{ padding: '4px 10px', fontSize: '11px' }}
                   >
-                    <Plus size={13} /> Thêm Hộp Cơm Vào Giỏ
+                    <Plus size={14} /> Thêm Hộp Cơm
                   </button>
                 </div>
               </div>
             );
           })()}
 
-          {/* 2-Column Food Grid Layout for Standalone / Non-Mix items */}
+          {/* Search & Category Filter Section */}
+          <div style={{ margin: '14px 0 10px' }}>
+            {/* Search Box */}
+            <div style={{ position: 'relative', marginBottom: '10px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text"
+                className="input-field"
+                placeholder="Tìm món ăn..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{ paddingLeft: '32px' }}
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter Chips */}
+            {(() => {
+              const categories = ['ALL', ...menuData.map(c => c.category)];
+              if (categories.length <= 2 && searchQuery === '') return null;
+
+              return (
+                <div className="category-scroll-bar">
+                  {categories.map((cat, idx) => {
+                    const isActive = selectedCategory === cat;
+                    const emoji = cat === 'ALL' ? '🍽️' : getCategoryEmoji(cat);
+                    const label = cat === 'ALL' ? 'Tất cả' : cat;
+
+                    return (
+                      <button
+                        key={idx}
+                        className={`category-chip ${isActive ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory(cat)}
+                      >
+                        {emoji} {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* 2-Column Food Grid Layout */}
           <div>
             {(() => {
               const isMixMenu = Boolean(
@@ -762,24 +723,46 @@ export default function UserView({ session: propSession, settings: propSettings,
               );
 
               const filteredMenu = menuData.map(catGroup => {
-                if (!isMixMenu) return catGroup;
+                if (selectedCategory !== 'ALL' && catGroup.category !== selectedCategory) {
+                  return null;
+                }
 
-                // Filter out items that are toppings, free gifts, or 0đ mix items already rendered in Mix Box
-                const nonMixItems = (catGroup.items || []).filter(item => {
-                  const isMixItem = item.isTopping || item.isFreeGift || item.price === 0;
-                  return !isMixItem;
-                });
+                let items = catGroup.items || [];
+
+                if (isMixMenu) {
+                  items = items.filter(item => !(item.isTopping || item.isFreeGift || item.price === 0));
+                }
+
+                if (searchQuery.trim() !== '') {
+                  const q = searchQuery.toLowerCase().trim();
+                  items = items.filter(item => item.name.toLowerCase().includes(q));
+                }
+
+                if (items.length === 0) return null;
 
                 return {
                   ...catGroup,
-                  items: nonMixItems
+                  items
                 };
-              }).filter(catGroup => catGroup.items.length > 0);
+              }).filter(Boolean);
+
+              if (filteredMenu.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '24px', marginBottom: '4px' }}>🔍</p>
+                    <p style={{ fontSize: '13px', fontWeight: '600' }}>Không tìm thấy món ăn phù hợp</p>
+                    <p style={{ fontSize: '11px', marginTop: '2px' }}>Thử tìm kiếm với từ khóa khác nhé.</p>
+                  </div>
+                );
+              }
 
               return filteredMenu.map((catGroup, catIdx) => (
                 <div key={catIdx} className="menu-category-section">
                   <div className="category-header-title">
-                    {catGroup.category}
+                    <span>{getCategoryEmoji(catGroup.category)} {catGroup.category}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                      {catGroup.items.length} món
+                    </span>
                   </div>
 
                   <div className="food-grid-2col">
@@ -796,7 +779,7 @@ export default function UserView({ session: propSession, settings: propSettings,
                           disabled={isClosed}
                           title="Chọn món này"
                         >
-                          <Plus size={14} />
+                          <Plus size={15} />
                         </button>
                       </div>
                     ))}
@@ -811,10 +794,10 @@ export default function UserView({ session: propSession, settings: propSettings,
       {/* Right Column: Live Orders List Side Panel */}
       <div>
         <div className="glass-card">
-          <div className="flex-between" style={{ marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+          <div className="flex-between" style={{ marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Users size={16} style={{ color: 'var(--text-main)' }} />
-              <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-main)', fontSize: '13px', fontWeight: '700' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-main)', fontSize: '14px', fontWeight: '700' }}>
                 Đồng Nghiệp Đã Đặt ({sessionOrders.length})
               </h3>
             </div>
@@ -822,56 +805,55 @@ export default function UserView({ session: propSession, settings: propSettings,
             <button 
               className="btn btn-outline btn-sm" 
               onClick={loadSessionOrders}
-              style={{ padding: '2px 5px', fontSize: '10px' }}
-              title="Cập nhật danh sách đơn mới nhất"
+              title="Cập nhật danh sách đơn"
             >
-              <RefreshCw size={11} /> Cập nhật
+              <RefreshCw size={12} /> Cập nhật
             </button>
           </div>
 
           {sessionOrders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px 10px', color: 'var(--text-muted)' }}>
-              <ShoppingBag size={28} style={{ opacity: 0.4, marginBottom: '6px' }} />
-              <p style={{ fontSize: '12px', fontWeight: '600' }}>Chưa có ai đặt món</p>
-              <p style={{ fontSize: '10px', marginTop: '2px' }}>Hãy là người đầu tiên mở hàng nhé!</p>
+            <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
+              <ShoppingBag size={32} style={{ opacity: 0.3, marginBottom: '6px' }} />
+              <p style={{ fontSize: '13px', fontWeight: '600' }}>Chưa có ai đặt món</p>
+              <p style={{ fontSize: '11px', marginTop: '2px' }}>Hãy là người đầu tiên mở hàng nhé!</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '75vh', overflowY: 'auto', paddingRight: '2px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '75vh', overflowY: 'auto', paddingRight: '2px' }}>
               {sessionOrders.map((order, idx) => (
                 <div 
                   key={order.id || idx}
                   style={{
                     background: 'var(--input-bg)',
                     border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    padding: '8px 10px'
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 12px'
                   }}
                 >
                   {/* Header: User name & Total */}
                   <div className="flex-between" style={{ marginBottom: '4px' }}>
-                    <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       👤 {order.userName}
                       {order.userName === userName && (
-                        <span style={{ fontSize: '9px', background: 'var(--badge-bg)', border: '1px solid var(--border-color)', padding: '1px 4px', borderRadius: '3px' }}>Bạn</span>
+                        <span style={{ fontSize: '9px', background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)', padding: '1px 5px', borderRadius: 'var(--radius-xs)', fontWeight: '800' }}>Bạn</span>
                       )}
                     </span>
-                    <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)' }}>
+                    <span style={{ fontWeight: '800', fontSize: '13px', color: 'var(--accent-green)' }}>
                       {order.totalAmount.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
 
                   {/* Order Items */}
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px', lineHeight: '1.3' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', lineHeight: '1.4' }}>
                     {order.items.map((it, itemIdx) => (
                       <div key={itemIdx} style={{ marginBottom: '2px' }}>
                         <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{it.quantity}x</span> {it.name}
                         {it.selectedOptions?.length > 0 && (
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '3px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px' }}>
                             ({it.selectedOptions.map(o => o.choice).join(', ')})
                           </span>
                         )}
                         {it.notes && (
-                          <div style={{ fontSize: '10px', fontStyle: 'italic', color: 'var(--text-muted)', paddingLeft: '12px' }}>
+                          <div style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--text-muted)', paddingLeft: '12px' }}>
                             📝 {it.notes}
                           </div>
                         )}
@@ -880,11 +862,11 @@ export default function UserView({ session: propSession, settings: propSettings,
                   </div>
 
                   {/* Status Badge */}
-                  <div className="flex-between" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '4px' }}>
+                  <div className="flex-between" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '6px' }}>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
-                    <span className={`status-badge ${order.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-pending'}`} style={{ fontSize: '9px', padding: '1px 4px' }}>
+                    <span className={`status-badge ${order.paymentStatus === 'PAID' ? 'badge-paid' : 'badge-pending'}`}>
                       {order.paymentStatus === 'PAID' ? '🟢 Đã CK' : '⏳ Chưa CK'}
                     </span>
                   </div>
@@ -894,8 +876,8 @@ export default function UserView({ session: propSession, settings: propSettings,
                     <button 
                       className="btn btn-outline btn-sm" 
                       onClick={() => handleCopyColleagueOrder(order)}
-                      style={{ width: '100%', marginTop: '6px', fontSize: '10px', padding: '3px 6px' }}
-                      title={`Sao chép tất cả món của ${order.userName} vào giỏ hàng của bạn`}
+                      style={{ width: '100%', marginTop: '8px', fontSize: '11px', padding: '4px 8px' }}
+                      title={`Sao chép tất cả món của ${order.userName}`}
                     >
                       👯‍♂️ Đặt giống bạn này
                     </button>
@@ -914,14 +896,14 @@ export default function UserView({ session: propSession, settings: propSettings,
             <button 
               className="btn btn-outline btn-sm" 
               onClick={() => setPreviewImage(null)}
-              style={{ position: 'absolute', top: '-30px', right: '0', background: 'var(--bg-card)', color: 'var(--text-main)' }}
+              style={{ position: 'absolute', top: '-36px', right: '0', background: 'var(--bg-card)', color: 'var(--text-main)' }}
             >
-              <X size={14} /> Đóng
+              <X size={15} /> Đóng
             </button>
             <img 
               src={previewImage} 
               alt="Full size menu" 
-              style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: '4px', border: '1px solid var(--border-color)' }} 
+              style={{ maxWidth: '90vw', maxHeight: '82vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }} 
             />
           </div>
         </div>
@@ -931,22 +913,22 @@ export default function UserView({ session: propSession, settings: propSettings,
       {activeItem && (
         <div className="modal-overlay" onClick={() => setActiveItem(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="flex-between" style={{ marginBottom: '10px' }}>
-              <h3 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '15px' }}>{activeItem.name}</h3>
-              <button className="btn btn-outline btn-sm" onClick={() => setActiveItem(null)}>
-                <X size={14} />
+            <div className="flex-between" style={{ marginBottom: '12px' }}>
+              <h3 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '700' }}>{activeItem.name}</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setActiveItem(null)}>
+                <X size={16} />
               </button>
             </div>
 
-            <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '10px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-green)', marginBottom: '12px' }}>
               {activeItem.price.toLocaleString('vi-VN')}đ
             </div>
 
             {/* Options */}
             {activeItem.options && activeItem.options.map((optGroup, ogIdx) => (
-              <div key={ogIdx} style={{ marginBottom: '10px' }}>
+              <div key={ogIdx} style={{ marginBottom: '12px' }}>
                 <label className="form-label">{optGroup.title}</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {optGroup.choices.map((choice, cIdx) => {
                     const isSelected = modalOptions[optGroup.title]?.name === choice.name;
                     return (
@@ -969,12 +951,12 @@ export default function UserView({ session: propSession, settings: propSettings,
             ))}
 
             {/* Notes */}
-            <div className="form-group" style={{ marginTop: '10px' }}>
+            <div className="form-group" style={{ marginTop: '12px' }}>
               <label className="form-label">Ghi chú (Ít cay, không hành...)</label>
               <input 
                 type="text" 
                 className="input-field"
-                placeholder="Nhập ghi chú rồi nhấn Enter để thêm..."
+                placeholder="Ghi chú món..."
                 value={modalNotes}
                 onChange={e => setModalNotes(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddToCart()}
@@ -982,18 +964,18 @@ export default function UserView({ session: propSession, settings: propSettings,
             </div>
 
             {/* Quantity Selector */}
-            <div className="flex-between" style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
+            <div className="flex-between" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button className="btn btn-outline btn-sm" onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))}>
-                  <Minus size={12} />
+                  <Minus size={14} />
                 </button>
-                <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>{modalQuantity}</span>
+                <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)' }}>{modalQuantity}</span>
                 <button className="btn btn-outline btn-sm" onClick={() => setModalQuantity(modalQuantity + 1)}>
-                  <Plus size={12} />
+                  <Plus size={14} />
                 </button>
               </div>
 
-              <button className="btn btn-primary btn-sm" onClick={handleAddToCart}>
+              <button className="btn btn-primary" onClick={handleAddToCart}>
                 Thêm Vào Giỏ
               </button>
             </div>
@@ -1006,70 +988,71 @@ export default function UserView({ session: propSession, settings: propSettings,
         <div className="floating-cart">
           <div 
             onClick={() => setShowCartModal(true)} 
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
-            title="Nhấp để xem và chỉnh sửa giỏ hàng"
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
+            title="Xem chi tiết giỏ hàng"
           >
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <ShoppingCart size={22} style={{ color: 'var(--text-main)' }} />
               <span className="cart-badge-count">{totalCartCount}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--text-muted)', fontSize: '10px', display: 'block', lineHeight: 1.1 }}>
-                Giỏ hàng ({cart.length} món) • <span style={{ color: 'var(--text-main)', textDecoration: 'underline' }}>Xem chi tiết</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block', lineHeight: 1.1 }}>
+                Giỏ hàng ({cart.length} món)
               </span>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+              <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-green)', fontFamily: 'var(--font-heading)' }}>
                 {totalCartAmount.toLocaleString('vi-VN')}đ
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(true)} style={{ padding: '4px 8px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(true)}>
               <ChevronUp size={14} /> Chi Tiết
             </button>
             <button className="btn btn-primary btn-sm" onClick={handleSubmitOrder} disabled={isSubmitting}>
               <ShoppingCart size={14} />
-              {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn Ngay'}
+              {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Detailed Cart Modal */}
+      {/* Detailed Cart Modal / Bottom Sheet */}
       {showCartModal && (
-        <div className="modal-overlay" onClick={() => setShowCartModal(false)}>
-          <div className="modal-content" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+        <div className="bottom-sheet-overlay" onClick={() => setShowCartModal(false)}>
+          <div className="bottom-sheet-content" style={{ maxWidth: '480px', margin: '0 auto', width: '100%' }} onClick={e => e.stopPropagation()}>
+            <div className="sheet-handle"></div>
+
             {/* Modal Header */}
-            <div className="flex-between" style={{ marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShoppingCart size={18} style={{ color: 'var(--text-main)' }} />
-                <h3 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '15px', fontWeight: '700' }}>
+            <div className="flex-between" style={{ marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShoppingCart size={20} style={{ color: 'var(--text-main)' }} />
+                <h3 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '800' }}>
                   Giỏ Hàng Của Bạn ({totalCartCount} món)
                 </h3>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {cart.length > 0 && (
                   <button 
                     className="btn btn-outline btn-sm text-red" 
                     onClick={handleClearCart}
-                    style={{ fontSize: '10px', padding: '2px 6px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                    title="Xóa tất cả món trong giỏ hàng"
+                    style={{ fontSize: '11px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                   >
-                    <Trash2 size={11} /> Xóa tất cả
+                    <Trash2 size={12} /> Xóa tất cả
                   </button>
                 )}
-                <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(false)}>
-                  <X size={14} />
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowCartModal(false)}>
+                  <X size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Modal Body - Items List */}
+            {/* Items List */}
             {cart.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
-                <p style={{ fontSize: '28px', marginBottom: '6px' }}>🛒</p>
-                <p style={{ fontSize: '13px', fontWeight: '600' }}>Giỏ hàng của bạn đang trống</p>
-                <p style={{ fontSize: '11px', marginTop: '2px' }}>Hãy chọn món ăn từ thực đơn bên dưới nhé!</p>
+              <div style={{ textAlign: 'center', padding: '28px 10px', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '32px', marginBottom: '6px' }}>🛒</p>
+                <p style={{ fontSize: '14px', fontWeight: '600' }}>Giỏ hàng của bạn đang trống</p>
+                <p style={{ fontSize: '12px', marginTop: '2px' }}>Hãy chọn món ăn từ thực đơn bên dưới nhé!</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '2px' }}>
@@ -1079,21 +1062,19 @@ export default function UserView({ session: propSession, settings: propSettings,
                     style={{
                       background: 'var(--input-bg)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: '6px',
-                      padding: '8px 10px'
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '10px 12px'
                     }}
                   >
-                    {/* Item Top Info */}
                     <div className="flex-between" style={{ marginBottom: '4px' }}>
                       <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
                         {item.name}
                       </span>
-                      <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                      <span style={{ fontWeight: '800', fontSize: '13px', color: 'var(--accent-green)' }}>
                         {item.itemTotal.toLocaleString('vi-VN')}đ
                       </span>
                     </div>
 
-                    {/* Selected options & notes */}
                     {(item.selectedOptions?.length > 0 || item.notes) && (
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', lineHeight: '1.3' }}>
                         {item.selectedOptions?.map(o => `${o.title}: ${o.choice}`).join(', ')}
@@ -1101,38 +1082,31 @@ export default function UserView({ session: propSession, settings: propSettings,
                       </div>
                     )}
 
-                    {/* Controls: Stepper [-] Qty [+] and Delete button */}
-                    <div className="flex-between" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '4px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="flex-between" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button 
                           className="btn btn-outline btn-sm" 
                           onClick={() => handleDecrementCartItem(item.cartId)}
-                          style={{ width: '24px', height: '24px', padding: 0 }}
-                          title={item.quantity === 1 ? "Xóa món này" : "Giảm số lượng"}
+                          style={{ width: '26px', height: '26px', padding: 0 }}
                         >
                           <Minus size={12} />
                         </button>
-                        <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '18px', textAlign: 'center', color: 'var(--text-main)' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '800', minWidth: '20px', textAlign: 'center', color: 'var(--text-main)' }}>
                           {item.quantity}
                         </span>
                         <button 
                           className="btn btn-outline btn-sm" 
                           onClick={() => handleIncrementCartItem(item.cartId)}
-                          style={{ width: '24px', height: '24px', padding: 0 }}
-                          title="Tăng số lượng"
+                          style={{ width: '26px', height: '26px', padding: 0 }}
                         >
                           <Plus size={12} />
                         </button>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '4px' }}>
-                          ({(item.itemTotal / item.quantity).toLocaleString('vi-VN')}đ/món)
-                        </span>
                       </div>
 
                       <button 
                         className="btn btn-outline btn-sm text-red" 
                         onClick={() => handleRemoveCartItem(item.cartId)}
-                        style={{ padding: '2px 6px', fontSize: '10px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                        title="Xóa khỏi giỏ hàng"
+                        style={{ padding: '2px 8px', fontSize: '11px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                       >
                         <Trash2 size={12} /> Xóa
                       </button>
@@ -1142,30 +1116,29 @@ export default function UserView({ session: propSession, settings: propSettings,
               </div>
             )}
 
-            {/* Modal Footer */}
+            {/* Footer */}
             {cart.length > 0 && (
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '10px' }}>
-                <div className="flex-between" style={{ marginBottom: '10px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Tổng thanh toán:</span>
-                  <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-main)', fontFamily: 'var(--font-heading)' }}>
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px' }}>
+                <div className="flex-between" style={{ marginBottom: '12px' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Tổng thanh toán:</span>
+                  <span style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-green)', fontFamily: 'var(--font-heading)' }}>
                     {totalCartAmount.toLocaleString('vi-VN')}đ
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <button className="btn btn-outline btn-sm" onClick={() => setShowCartModal(false)} style={{ padding: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button className="btn btn-outline btn-lg" onClick={() => setShowCartModal(false)}>
                     Tiếp tục chọn
                   </button>
                   <button 
-                    className="btn btn-primary btn-sm" 
+                    className="btn btn-primary btn-lg" 
                     onClick={() => {
                       setShowCartModal(false);
                       handleSubmitOrder();
                     }}
                     disabled={isSubmitting}
-                    style={{ padding: '6px' }}
                   >
-                    <ShoppingCart size={14} />
+                    <ShoppingCart size={16} />
                     {isSubmitting ? 'Đang gửi...' : 'Chốt Đơn Ngay'}
                   </button>
                 </div>
@@ -1179,31 +1152,31 @@ export default function UserView({ session: propSession, settings: propSettings,
       {placedOrder && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ textAlign: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--badge-bg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-              <Check size={22} style={{ color: 'var(--text-main)' }} />
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <Check size={24} style={{ color: 'var(--accent-green)' }} />
             </div>
 
-            <h2 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '17px' }}>Đặt Món Thành Công!</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '2px' }}>
-              Cảm ơn <strong>{placedOrder.userName}</strong>. Quét mã QR của Admin để chuyển tiền nhé.
+            <h2 style={{ color: 'var(--text-main)', fontFamily: 'var(--font-heading)', fontSize: '18px', fontWeight: '800' }}>Đặt Món Thành Công!</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
+              Cảm ơn <strong>{placedOrder.userName}</strong>. Quét mã QR để chuyển tiền cơm trưa nhé.
             </p>
 
-            <div style={{ margin: '12px 0' }}>
+            <div style={{ margin: '14px 0' }}>
               {qrImage ? (
                 <div className="qr-container">
-                  <img src={qrImage} alt="Mã QR Admin" className="qr-img" style={{ width: '200px', height: '200px', objectFit: 'contain' }} />
+                  <img src={qrImage} alt="Mã QR Admin" className="qr-img" />
                 </div>
               ) : (
-                <div style={{ background: 'var(--bg-card-hover)', color: 'var(--text-muted)', padding: '10px', borderRadius: '6px', fontSize: '12px' }}>
-                  Admin chưa tải ảnh QR nhận tiền lên. Bạn hãy tự chuyển tiền cho Admin nhé!
+                <div style={{ background: 'var(--input-bg)', color: 'var(--text-muted)', padding: '12px', borderRadius: 'var(--radius-sm)', fontSize: '12px' }}>
+                  Người gom đơn chưa cập nhật QR ngân hàng. Hãy nhắn trực tiếp cho người gom đơn nhé!
                 </div>
               )}
             </div>
 
-            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', padding: '10px 12px', borderRadius: '6px', textAlign: 'left', marginBottom: '10px' }}>
+            <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', textAlign: 'left', marginBottom: '12px' }}>
               <div className="flex-between">
                 <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Số tiền cần chuyển:</span>
-                <strong style={{ color: 'var(--text-main)', fontSize: '15px' }}>
+                <strong style={{ color: 'var(--accent-green)', fontSize: '16px' }}>
                   {placedOrder.totalAmount.toLocaleString('vi-VN')}đ
                 </strong>
               </div>
@@ -1213,14 +1186,14 @@ export default function UserView({ session: propSession, settings: propSettings,
               <a 
                 href={qrImage} 
                 download={`QR_Chuyen_Tien_${placedOrder.userName.replace(/\s+/g, '_')}.png`}
-                className="btn btn-outline btn-sm" 
-                style={{ width: '100%', marginBottom: '8px', padding: '6px', textDecoration: 'none' }}
+                className="btn btn-outline" 
+                style={{ width: '100%', marginBottom: '10px', textDecoration: 'none' }}
               >
-                <Download size={14} /> Tải Ảnh QR Về Máy
+                <Download size={15} /> Tải Ảnh QR Về Máy
               </a>
             )}
 
-            <button className="btn btn-primary btn-sm" style={{ width: '100%', padding: '7px' }} onClick={() => setPlacedOrder(null)}>
+            <button className="btn btn-primary btn-lg" style={{ width: '100%' }} onClick={() => setPlacedOrder(null)}>
               Hoàn Tất
             </button>
           </div>
