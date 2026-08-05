@@ -518,27 +518,30 @@ export default function UserView({ session: propSession, settings: propSettings,
 
             const allItems = menuData.flatMap(cat => cat.items || []);
             
-            // Toppings that count towards maxAllowedItems
-            const toppingItems = allItems.filter(it => 
-              it.isTopping || 
-              (it.price === 0 && !it.isFreeGift && !it.name.toLowerCase().includes('(free)'))
-            );
-
-            // Free gifts (0đ) that can be checked freely without affecting topping limit
+            // Free gifts (0đ) that can be checked freely without affecting topping limit or tier price
             const freeGiftItems = allItems.filter(it => 
               it.isFreeGift || 
-              it.name.toLowerCase().includes('(free)')
+              it.name.toLowerCase().includes('(free)') ||
+              it.name.toLowerCase().includes('ăn kèm') ||
+              it.name.toLowerCase().includes('miễn phí') ||
+              it.name.toLowerCase().includes('tặng')
+            );
+
+            // Toppings/main dishes that count towards maxAllowedItems & tier pricing
+            const toppingItems = allItems.filter(it => 
+              (it.isTopping || (it.price === 0 && !freeGiftItems.some(fg => fg.name === it.name))) &&
+              !freeGiftItems.some(fg => fg.name === it.name)
             );
 
             // Fallback: If AI didn't tag isTopping/isFreeGift, all 0đ items are toppings
             const mixSelectionItems = toppingItems.length > 0 ? toppingItems : allItems.filter(it => it.price === 0);
 
-            // Count only selected toppings towards maxAllowed
+            // Count only selected toppings towards maxAllowed & tier pricing (free gifts excluded)
             const selectedToppingsCount = selectedMixDishes.filter(dishName => 
               mixSelectionItems.some(it => it.name === dishName)
             ).length;
 
-            const count = selectedMixDishes.length;
+            const count = selectedToppingsCount;
             let selectedPrice = 0;
             if (count === 0) {
               selectedPrice = 0;

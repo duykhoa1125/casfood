@@ -50,7 +50,7 @@ Các thực đơn bán lẻ từng món (sữa hạt, sinh tố, bún, phở, m�
 
 - Khi `isMixMenu: true` với TIER PRICING: Tất cả món trong danh sách chọn → `"isTopping": true`, `"price": 0`.
 - Khi `isMixMenu: true` với MAX TOPPING: Món trong danh sách topping giới hạn → `"isTopping": true`, `"price": 0`.
-- Món Tặng Kèm Miễn Phí (Free canh rong biển, Free nước...): Gán `"isFreeGift": true`, `"price": 0`.
+- Món Tặng Kèm Miễn Phí (Free canh, dưa leo ăn kèm, canh cải, rau ăn kèm, đồ chua, nước miễn phí...): BẮT BUỘC gán `"isFreeGift": true`, `"price": 0`.
 - Món mua thêm có tiền (Cơm thêm 2k, Canh thêm 3k): Gán giá tương ứng.
 
 ---
