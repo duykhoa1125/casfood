@@ -55,6 +55,31 @@ Các thực đơn bán lẻ từng món (sữa hạt, sinh tố, bún, phở, m�
 
 ---
 
+## QUY TẮC TRÍCH XUẤT TÙY CHỌN KÈM THEO (`options`)
+
+BẮT BUỘC trích xuất mảng `"options"` khi:
+1. Tiêu đề nhóm/hạng mục có danh sách các loại/sợi/vị/lựa chọn phân cách bởi dấu gạch chéo `/`, dấu phẩy `,` hoặc trong ngoặc:
+   - Ví dụ tiêu đề: `Bánh canh / Bún / Mì / Hủ tiếu :` và các món bên dưới là `+ Ức Gà xé`, `+ Thập cẩm`...
+   $\rightarrow$ TẤT CẢ món bên dưới BẮT BUỘC có `options`:
+   ```json
+   "options": [
+     {
+       "title": "Chọn loại sợi",
+       "choices": [
+         { "name": "Bánh canh", "price": 0 },
+         { "name": "Bún", "price": 0 },
+         { "name": "Mì", "price": 0 },
+         { "name": "Hủ tiếu", "price": 0 }
+       ]
+     }
+   ]
+   ```
+2. Tiêu đề nhóm có chữ Thái / Sate / Lẩu (Ví dụ: `Bún Thái / Mì Thái / Bánh canh Thái : + Thái tôm`):
+   $\rightarrow$ Trích xuất `options`: `[ { "name": "Bún Thái", "price": 0 }, { "name": "Mì Thái", "price": 0 }, { "name": "Bánh canh Thái", "price": 0 } ]`.
+3. Tùy chọn đường/đá/size/topping đồ uống.
+
+---
+
 ## QUY TẮC BỎ QUA
 
 Không trích xuất các thông tin sau:

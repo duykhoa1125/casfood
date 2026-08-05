@@ -121,7 +121,7 @@ router.post('/', async (req, res) => {
         isTopping: Boolean(item.isTopping),
         isFreeGift: Boolean(item.isFreeGift),
         description: item.description || '',
-        options: []
+        options: Array.isArray(item.options) ? item.options : []
       }))
     }));
 
