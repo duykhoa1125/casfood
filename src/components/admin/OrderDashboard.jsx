@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Unlock, ShoppingBag, Trash2, RefreshCw, PlusCircle, Search, DollarSign, CheckCircle2, Clock } from 'lucide-react';
+import { Lock, LockOpen, ShoppingBag, Trash, ArrowsClockwise, PlusCircle, MagnifyingGlass, CurrencyCircleDollar, CheckCircle, Clock } from '@phosphor-icons/react';
 import { toggleSessionStatus, toggleOrderPayment, deleteOrder, deleteSession } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
 
@@ -108,19 +108,19 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <button className="btn btn-outline btn-sm" onClick={onRefresh}>
-              <RefreshCw size={13} /> Làm mới
+              <ArrowsClockwise size={14} weight="bold" /> Làm mới
             </button>
 
             <button 
               className={`btn btn-sm ${isClosed ? 'btn-success' : 'btn-outline'}`}
               onClick={handleToggleSession}
             >
-              {isClosed ? <Unlock size={13} /> : <Lock size={13} />}
+              {isClosed ? <LockOpen size={14} weight="bold" /> : <Lock size={14} weight="bold" />}
               {isClosed ? 'Mở Nhận Đơn' : 'Đóng Phiên'}
             </button>
 
             <button className="btn btn-primary btn-sm" onClick={handleResetNewSession} title="Tạo phiên mới hoàn toàn">
-              <PlusCircle size={13} />
+              <PlusCircle size={14} weight="bold" />
               Tạo Phiên Mới
             </button>
           </div>
@@ -130,7 +130,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
           <div style={{ background: 'var(--input-bg)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <DollarSign size={12} /> Tổng tiền cơm
+              <CurrencyCircleDollar size={14} weight="bold" /> Tổng tiền cơm
             </div>
             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-main)', marginTop: '2px' }}>
               {totalRevenue.toLocaleString('vi-VN')}đ
@@ -139,7 +139,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
 
           <div style={{ background: 'var(--input-bg)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '11px', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={12} /> Đã thu ({paidCount})
+              <CheckCircle size={14} weight="bold" /> Đã thu ({paidCount})
             </div>
             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-green)', marginTop: '2px' }}>
               {paidAmount.toLocaleString('vi-VN')}đ
@@ -148,7 +148,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
 
           <div style={{ background: 'var(--input-bg)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <div style={{ fontSize: '11px', color: 'var(--accent-orange)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Clock size={12} /> Còn thiếu ({orders.length - paidCount})
+              <Clock size={14} weight="bold" /> Còn thiếu ({orders.length - paidCount})
             </div>
             <div style={{ fontSize: '15px', fontWeight: '800', color: 'var(--accent-orange)', marginTop: '2px' }}>
               {pendingAmount.toLocaleString('vi-VN')}đ
@@ -166,7 +166,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <MagnifyingGlass size={14} weight="bold" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text"
                 className="input-field"
@@ -184,7 +184,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
 
         {filteredOrders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)' }}>
-            <ShoppingBag size={36} style={{ opacity: 0.3, marginBottom: '6px' }} />
+            <ShoppingBag size={40} weight="duotone" style={{ opacity: 0.3, marginBottom: '6px' }} />
             <p style={{ fontSize: '13px', fontWeight: '600' }}>Chưa có đơn hàng phù hợp</p>
             <p style={{ fontSize: '11px', marginTop: '2px' }}>Chia sẻ link cho đồng nghiệp để nhận đơn mới nhé!</p>
           </div>
@@ -248,7 +248,7 @@ export default function OrderDashboard({ session, orders, onRefresh, onResetSess
                           onClick={() => handleDeleteOrder(o.id, o.userName)}
                           title="Xóa đơn này"
                         >
-                          <Trash2 size={13} />
+                          <Trash size={14} weight="bold" />
                         </button>
                       </div>
                     </td>

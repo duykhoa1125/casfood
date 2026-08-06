@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Utensils, ShieldCheck, Users, ChevronRight, LogIn, ArrowLeft, Sparkles } from 'lucide-react';
+import { CookingPot, ShieldCheck, Users, CaretRight, SignIn, ArrowLeft, Sparkle } from '@phosphor-icons/react';
 
 function generateAdminSlug() {
   const arr = new Uint8Array(8);
@@ -63,8 +63,8 @@ export default function LandingPage() {
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
             <div style={{
-              width: '42px',
-              height: '42px',
+              width: '44px',
+              height: '44px',
               borderRadius: 'var(--radius-md)',
               background: 'var(--btn-primary-bg)',
               color: 'var(--btn-primary-text)',
@@ -73,7 +73,7 @@ export default function LandingPage() {
               justifyContent: 'center',
               boxShadow: 'var(--shadow-sm)'
             }}>
-              <Utensils size={22} />
+              <CookingPot size={24} weight="bold" />
             </div>
             <span style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>CasFood</span>
             <span className="logo-badge">LUNCH AI</span>
@@ -116,8 +116,8 @@ export default function LandingPage() {
               onMouseOut={e => e.currentTarget.style.opacity = '1'}
             >
               <div style={{
-                width: '36px',
-                height: '36px',
+                width: '38px',
+                height: '38px',
                 borderRadius: 'var(--radius-sm)',
                 background: 'rgba(0,0,0,0.15)',
                 display: 'flex',
@@ -125,13 +125,13 @@ export default function LandingPage() {
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <ShieldCheck size={20} />
+                <ShieldCheck size={22} weight="bold" />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: '700', fontSize: '14px' }}>Tôi là người gom đơn</div>
                 <div style={{ fontSize: '11px', opacity: 0.8, marginTop: '2px' }}>Tạo phòng mới, dán menu AI, chia sẻ link</div>
               </div>
-              <ChevronRight size={18} />
+              <CaretRight size={18} weight="bold" />
             </button>
 
             {/* Colleague Role */}
@@ -160,8 +160,8 @@ export default function LandingPage() {
               }}
             >
               <div style={{
-                width: '36px',
-                height: '36px',
+                width: '38px',
+                height: '38px',
                 borderRadius: 'var(--radius-sm)',
                 background: 'var(--bg-dark)',
                 border: '1px solid var(--border-color)',
@@ -170,7 +170,7 @@ export default function LandingPage() {
                 justifyContent: 'center',
                 flexShrink: 0
               }}>
-                <Users size={20} style={{ color: 'var(--text-main)' }} />
+                <Users size={22} weight="duotone" style={{ color: 'var(--text-main)' }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-main)' }}>Tôi là người đặt món</div>
@@ -178,7 +178,7 @@ export default function LandingPage() {
                   Nhập mã phòng hoặc dán link gom đơn
                 </div>
               </div>
-              <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+              <CaretRight size={18} weight="bold" style={{ color: 'var(--text-muted)' }} />
             </button>
           </div>
         )}
@@ -190,7 +190,7 @@ export default function LandingPage() {
               onClick={() => setStep('role')}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
             >
-              <ArrowLeft size={14} /> Quay lại
+              <ArrowLeft size={14} weight="bold" /> Quay lại
             </button>
 
             <h2 style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
@@ -219,11 +219,11 @@ export default function LandingPage() {
               onClick={handleConfirmAdmin}
               disabled={!adminName.trim()}
             >
-              <ShieldCheck size={16} /> Tạo Phòng Gom Đơn Mới
+              <ShieldCheck size={18} weight="bold" /> Tạo Phòng Gom Đơn Mới
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <Sparkles size={13} style={{ color: 'var(--accent-orange)' }} /> Link quản lý riêng tư sẽ tự động được cấp cho bạn
+              <Sparkle size={14} weight="fill" style={{ color: 'var(--accent-orange)' }} /> Link quản lý riêng tư sẽ tự động được cấp cho bạn
             </p>
           </div>
         )}
@@ -235,7 +235,7 @@ export default function LandingPage() {
               onClick={() => setStep('role')}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px', padding: 0, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}
             >
-              <ArrowLeft size={14} /> Quay lại
+              <ArrowLeft size={14} weight="bold" /> Quay lại
             </button>
 
             <h2 style={{ color: 'var(--text-main)', fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
@@ -264,7 +264,7 @@ export default function LandingPage() {
               onClick={handleJoinOrder}
               disabled={!joinCode.trim()}
             >
-              <LogIn size={16} /> Vào Phòng Đặt Món
+              <SignIn size={18} weight="bold" /> Vào Phòng Đặt Món
             </button>
           </div>
         )}

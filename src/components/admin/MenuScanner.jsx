@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clipboard, UploadCloud, Sparkles, Plus, Trash2, Check, Image as ImageIcon, X, Edit3, Eye, Menu as MenuIcon, Loader2 } from 'lucide-react';
+import { ClipboardText, UploadSimple, Sparkle, Plus, Trash, Check, Image as ImageIcon, X, PencilSimple, Eye, List, CircleNotch } from '@phosphor-icons/react';
 import { createSession, updateSession, parseMenuWithAI } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
 
@@ -257,11 +257,11 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
         <div className="glass-card">
           <div className="flex-between" style={{ marginBottom: '10px' }}>
             <h2 style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '800' }}>
-              <MenuIcon size={16} />
+              <List size={18} weight="bold" />
               Thực Đơn Đang Mở ({totalActiveItems} món)
             </h2>
             <button className="btn btn-outline btn-sm" onClick={() => setIsEditingActiveMenu(!isEditingActiveMenu)}>
-              {isEditingActiveMenu ? <Eye size={13} /> : <Edit3 size={13} />}
+              {isEditingActiveMenu ? <Eye size={14} weight="bold" /> : <PencilSimple size={14} weight="bold" />}
               {isEditingActiveMenu ? 'Xem' : 'Sửa Món & Giá'}
             </button>
           </div>
@@ -304,14 +304,14 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                   <div className="flex-between" style={{ marginBottom: '6px' }}>
                     <input type="text" className="input-field" style={{ fontWeight: '700', fontSize: '12px', flex: 1, marginRight: '6px' }} value={cat.category}
                       onChange={e => { const u = [...activeMenuState]; u[catIdx].category = e.target.value; setActiveMenuState(u); }} />
-                    <button className="btn btn-outline btn-sm" onClick={() => handleActiveAddItem(catIdx)}><Plus size={12} /></button>
+                    <button className="btn btn-outline btn-sm" onClick={() => handleActiveAddItem(catIdx)}><Plus size={12} weight="bold" /></button>
                   </div>
                   {cat.items?.map((item, itemIdx) => (
                     <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 28px', gap: '6px', alignItems: 'center' }}>
                         <input type="text" className="input-field" value={item.name} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
                         <input type="number" className="input-field" value={item.price} onChange={e => handleActiveUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
-                        <button className="btn btn-outline btn-sm text-red" title="Xóa món" onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash2 size={13} /></button>
+                        <button className="btn btn-outline btn-sm text-red" title="Xóa món" onClick={() => handleActiveRemoveItem(catIdx, itemIdx)}><Trash size={14} weight="bold" /></button>
                       </div>
                     </div>
                   ))}
@@ -319,7 +319,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
               ))}
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={handleSaveActiveMenuChanges} disabled={isSavingMenu}>
-                  <Check size={14} /> {isSavingMenu ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                  <Check size={14} weight="bold" /> {isSavingMenu ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                 </button>
                 <button className="btn btn-outline btn-sm" onClick={() => setIsEditingActiveMenu(false)}>Hủy</button>
               </div>
@@ -331,7 +331,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
       {/* CARD 2: PASTE MENU AI SCANNER */}
       <div className="glass-card">
         <h2 style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '800', marginBottom: '10px' }}>
-          <Sparkles size={16} style={{ color: 'var(--accent-orange)' }} />
+          <Sparkle size={18} weight="fill" style={{ color: 'var(--accent-orange)' }} />
           {session ? 'Dán Menu Mới / Tạo Phiên Mới' : 'Tạo Phiên Gom Đơn Với AI'}
         </h2>
 
@@ -345,7 +345,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
             transition: 'all var(--transition-fast)', marginBottom: '10px'
           }}
         >
-          <UploadCloud size={24} style={{ color: 'var(--text-muted)', marginBottom: '4px' }} />
+          <UploadSimple size={26} weight="bold" style={{ color: 'var(--text-muted)', marginBottom: '4px' }} />
           <p style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '13px', marginBottom: '2px' }}>
             Dán văn bản thực đơn từ Zalo / Facebook
           </p>
@@ -355,11 +355,11 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-primary" onClick={handlePasteFromClipboard} disabled={isParsing}>
-              {isParsing ? <Loader2 size={14} className="animate-spin" /> : <Clipboard size={14} />}
+              {isParsing ? <CircleNotch size={14} weight="bold" className="animate-spin" /> : <ClipboardText size={14} weight="bold" />}
               {isParsing ? 'AI Đang Phân Tích...' : 'Dán Từ Clipboard'}
             </button>
             <label className="btn btn-outline" style={{ margin: 0, cursor: 'pointer' }}>
-              <ImageIcon size={14} /> Đính Kèm Ảnh
+              <ImageIcon size={14} weight="bold" /> Đính Kèm Ảnh
               <input type="file" accept="image/*" multiple onChange={handleImageAttachment} style={{ display: 'none' }} />
             </label>
           </div>
@@ -382,7 +382,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                   <img src={img} alt="" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border-color)' }} />
                   <button type="button" onClick={() => handleRemoveAttachedImage(idx)}
                     style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#000', color: '#fff', border: '1px solid #fff', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
-                    <X size={10} />
+                    <X size={10} weight="bold" />
                   </button>
                 </div>
               ))}
@@ -398,7 +398,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                 ✅ AI đã phân tích: <strong>{menuCategories.length} nhóm</strong>, <strong>{totalDraftItems} món</strong>
               </span>
               <button className="btn btn-ghost btn-sm" onClick={() => { setMenuCategories(null); setRawText(''); setParseError(''); }}>
-                <X size={12} /> Hủy
+                <X size={12} weight="bold" /> Hủy
               </button>
             </div>
 
@@ -411,7 +411,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
             {/* Category Items Editor */}
             <div className="flex-between" style={{ marginBottom: '8px' }}>
               <h3 style={{ color: 'var(--text-main)', fontSize: '12px', fontWeight: '700' }}>Kiểm Tra & Chỉnh Sửa Thực Đơn</h3>
-              <button className="btn btn-outline btn-sm" onClick={handleAddCategory}><Plus size={12} /> Thêm Nhóm</button>
+              <button className="btn btn-outline btn-sm" onClick={handleAddCategory}><Plus size={12} weight="bold" /> Thêm Nhóm</button>
             </div>
 
             {menuCategories.map((cat, catIdx) => (
@@ -419,14 +419,14 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
                 <div className="flex-between" style={{ marginBottom: '6px' }}>
                   <input type="text" className="input-field" style={{ fontWeight: '700', flex: 1, marginRight: '6px' }} value={cat.category}
                     onChange={e => { const u = [...menuCategories]; u[catIdx].category = e.target.value; setMenuCategories(u); }} />
-                  <button className="btn btn-outline btn-sm" onClick={() => handleAddItem(catIdx)}><Plus size={12} /></button>
+                  <button className="btn btn-outline btn-sm" onClick={() => handleAddItem(catIdx)}><Plus size={12} weight="bold" /></button>
                 </div>
                 {cat.items.map((item, itemIdx) => (
                   <div key={item.id || itemIdx} style={{ marginBottom: '6px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 28px', gap: '6px' }}>
                       <input type="text" className="input-field" value={item.name} onChange={e => handleUpdateItem(catIdx, itemIdx, 'name', e.target.value)} />
                       <input type="number" className="input-field" value={item.price} onChange={e => handleUpdateItem(catIdx, itemIdx, 'price', parseInt(e.target.value) || 0)} />
-                      <button className="btn btn-outline btn-sm text-red" onClick={() => handleRemoveItem(catIdx, itemIdx)}><Trash2 size={13} /></button>
+                      <button className="btn btn-outline btn-sm text-red" onClick={() => handleRemoveItem(catIdx, itemIdx)}><Trash size={14} weight="bold" /></button>
                     </div>
                   </div>
                 ))}
@@ -434,7 +434,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
             ))}
 
             <button className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '10px' }} onClick={handleSaveSession}>
-              <Check size={16} /> {session ? 'Mở Phiên Mới (Thay Phiên Hiện Tại)' : 'Mở Phiên Gom Đơn & Tạo Link'}
+              <Check size={16} weight="bold" /> {session ? 'Mở Phiên Mới (Thay Phiên Hiện Tại)' : 'Mở Phiên Gom Đơn & Tạo Link'}
             </button>
           </div>
         )}
@@ -446,7 +446,7 @@ export default function MenuScanner({ session, onSessionCreated, onSessionUpdate
           <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
             <button onClick={() => setPreviewImage(null)}
               style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#000', color: '#fff', border: '1px solid #fff', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={16} />
+              <X size={16} weight="bold" />
             </button>
             <img src={previewImage} alt="Preview" style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)' }} />
           </div>

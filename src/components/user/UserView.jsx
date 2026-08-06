@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Check, Edit2, AlertTriangle, X, QrCode, Maximize2, ChevronUp, Trash2, Download, Users, ShoppingBag, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, PencilSimple as Edit2, Warning as AlertTriangle, X, QrCode, ArrowsOut as Maximize2, CaretUp as ChevronUp, Trash as Trash2, DownloadSimple as Download, Users, ShoppingBag, ArrowsClockwise as RefreshCw, Image as ImageIcon } from '@phosphor-icons/react';
 import confetti from 'canvas-confetti';
 import { submitOrder, fetchSession, fetchOrders } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';

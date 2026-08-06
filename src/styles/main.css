@@ -1,6 +1,6 @@
 :root {
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
   --radius-xs: 4px;
   --radius-sm: 6px;
@@ -787,3 +787,23 @@ pre.report-box {
     font-size: 14px !important;
   }
 }
+
+/* Icon Animations & Utilities */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+svg {
+  vertical-align: middle;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+button:hover svg {
+  transform: scale(1.08);
+}
+

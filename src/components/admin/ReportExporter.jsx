@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, Store } from 'lucide-react';
+import { Copy, Check, Storefront } from '@phosphor-icons/react';
 
 export default function ReportExporter({ session, orders }) {
   const [copiedVendor, setCopiedVendor] = useState(false);
@@ -73,10 +73,10 @@ export default function ReportExporter({ session, orders }) {
       <div style={{ background: 'var(--code-bg)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
         <div className="flex-between" style={{ marginBottom: '8px' }}>
           <h4 style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700' }}>
-            <Store size={15} style={{ color: 'var(--accent-orange)' }} /> Gộp Món Gửi Quán (Bản Copy 1-Click)
+            <Storefront size={16} weight="duotone" style={{ color: 'var(--accent-orange)' }} /> Gộp Món Gửi Quán (Bản Copy 1-Click)
           </h4>
           <button className="btn btn-primary btn-sm" onClick={copyVendorReport}>
-            {copiedVendor ? <Check size={13} /> : <Copy size={13} />}
+            {copiedVendor ? <Check size={14} weight="bold" /> : <Copy size={14} weight="bold" />}
             {copiedVendor ? 'Đã sao chép!' : 'Copy Gửi Quán'}
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, QrCode, CheckCircle2, Trash2 } from 'lucide-react';
+import { X, QrCode, CheckCircle, Trash } from '@phosphor-icons/react';
 import { updateAdminSettings } from '../../services/api';
 import PopupAlert from '../common/PopupAlert';
 
@@ -65,11 +65,11 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="flex-between" style={{ marginBottom: '14px' }}>
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)', fontSize: '16px', fontWeight: '800' }}>
-            <QrCode size={20} style={{ color: 'var(--accent-green)' }} />
+            <QrCode size={22} weight="duotone" style={{ color: 'var(--accent-green)' }} />
             Mã QR Ngân Hàng Admin
           </h3>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>
-            <X size={16} />
+            <X size={16} weight="bold" />
           </button>
         </div>
 
@@ -106,13 +106,13 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
                   style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   title="Xóa ảnh QR này"
                 >
-                  <Trash2 size={12} />
+                  <Trash size={12} weight="bold" />
                 </button>
               </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '20px 10px', background: 'var(--input-bg)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', margin: '14px 0', color: 'var(--text-muted)' }}>
-              <QrCode size={36} style={{ opacity: 0.3, marginBottom: '6px' }} />
+              <QrCode size={36} weight="duotone" style={{ opacity: 0.3, marginBottom: '6px' }} />
               <p style={{ fontSize: '12px' }}>Chưa có mã QR ngân hàng</p>
             </div>
           )}
@@ -132,7 +132,7 @@ export default function AdminBankModal({ settings, onClose, onSaveSuccess }) {
               style={{ flex: 1 }}
               disabled={saving}
             >
-              {savedSuccess ? <CheckCircle2 size={14} style={{ color: 'var(--accent-green)' }} /> : null}
+              {savedSuccess ? <CheckCircle size={16} weight="bold" style={{ color: 'var(--accent-green)' }} /> : null}
               {saving ? 'Đang lưu...' : savedSuccess ? 'Đã lưu!' : 'Lưu Mã QR'}
             </button>
           </div>

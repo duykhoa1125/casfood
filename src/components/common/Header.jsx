@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Utensils, QrCode, Share2, Sun, Moon, LogOut, Check } from 'lucide-react';
+import { CookingPot, QrCode, ShareNetwork, Sun, Moon, SignOut, Check } from '@phosphor-icons/react';
 import PopupAlert from './PopupAlert';
 
 export default function Header({ session, isAdminView, adminSlug, onOpenBankModal }) {
@@ -76,8 +76,8 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
         }}
       >
         <div style={{
-          width: '30px',
-          height: '30px',
+          width: '32px',
+          height: '32px',
           borderRadius: 'var(--radius-xs)',
           background: 'var(--btn-primary-bg)',
           color: 'var(--btn-primary-text)',
@@ -86,7 +86,7 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
           justifyContent: 'center',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          <Utensils size={16} />
+          <CookingPot size={18} weight="bold" />
         </div>
         <span style={{ fontWeight: '800', letterSpacing: '-0.3px' }}>CasFood</span>
         <span className="logo-badge">{isAdminView ? 'QUẢN LÝ' : 'ĐẶT MÓN'}</span>
@@ -107,7 +107,7 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
           title={theme === 'dark' ? 'Chuyển giao diện Sáng' : 'Chuyển giao diện Tối'}
           style={{ borderRadius: 'var(--radius-sm)' }}
         >
-          {theme === 'dark' ? <Sun size={15} style={{ color: 'var(--accent-orange)' }} /> : <Moon size={15} style={{ color: 'var(--accent-color)' }} />}
+          {theme === 'dark' ? <Sun size={16} weight="bold" style={{ color: 'var(--accent-orange)' }} /> : <Moon size={16} weight="bold" style={{ color: 'var(--accent-color)' }} />}
         </button>
 
         {/* QR Bank Settings (Admin) */}
@@ -118,7 +118,7 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
             title="Cài đặt QR Chuyển Khoản Ngân Hàng"
             style={{ gap: '5px' }}
           >
-            <QrCode size={15} />
+            <QrCode size={16} weight="bold" />
             <span className="hide-mobile" style={{ fontSize: '11px' }}>QR Ngân Hàng</span>
           </button>
         )}
@@ -130,7 +130,7 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
           title="Sao chép link gửi đồng nghiệp"
           style={{ gap: '5px' }}
         >
-          {copied ? <Check size={15} /> : <Share2 size={15} />}
+          {copied ? <Check size={16} weight="bold" /> : <ShareNetwork size={16} weight="bold" />}
           <span style={{ fontSize: '11px', fontWeight: '700' }}>
             {copied ? 'Đã sao chép' : 'Gửi Link'}
           </span>
@@ -143,7 +143,7 @@ export default function Header({ session, isAdminView, adminSlug, onOpenBankModa
             onClick={handleLogout}
             title="Đổi vai trò người gom đơn"
           >
-            <LogOut size={15} />
+            <SignOut size={16} weight="bold" />
           </button>
         )}
       </div>
